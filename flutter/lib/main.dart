@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import 'dashboard.dart';
+import 'botpopup.dart';
+import 'personalinfo.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Money Matters',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 22, 1, 58),
+        ),
+        useMaterial3: true,
+      ),
+      routes: {
+        '/': (context) => const MyHomePage(title: 'Money Matters'),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/botpopup': (context) => const ChatbotScreen(),
+        '/personalinfo': (context) => const PersonalInfoScreen(),
+      },
+      initialRoute: '/',
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  final String title;
+  const MyHomePage({super.key, required this.title});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const CircleAvatar(
+              radius: 18, // Adjust size
+              backgroundImage: AssetImage('assets/avatar.png'), // Asset image
+            ),
+            onPressed: () {
+              // Navigate to personal information screen
+              Navigator.pushNamed(context, '/personalinfo');
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'Welcome to Money Matters!',
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/dashboard');
+              },
+              child: const Text('Go to Dashboard'),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/botpopup');
+        },
+        tooltip: 'Chatbot',
+        child: const Icon(Icons.chat),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+}

@@ -22,10 +22,6 @@ class FinanceChatbotModel:
         
         self.history = []
 
-    def start_session(self):
-        """Starts the chatbot session with a greeting."""
-        print("Bot: Hello buddy! How can I help you?")
-
     def get_response(self, user_input):
         """Handles a conversation with the user."""
         chat_session = self.model.start_chat(history=self.history)

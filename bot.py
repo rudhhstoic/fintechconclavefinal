@@ -37,15 +37,3 @@ class FinanceChatbotModel:
         """Maintains conversation history for context in the chatbot."""
         self.history.append({'role': 'user', 'parts': [user_input]})
         self.history.append({'role': 'model', 'parts': [model_response]})
-
-# Usage Example
-if __name__ == "__main__":
-    api_key = "AIzaSyBA2eQI5SxOpsZlwTybTluQ8F4h-JT90co"  # Replace with your actual API key
-    chatbot = FinanceChatbotModel(api_key)
-
-    chatbot.start_session()
-
-    while True:
-        user_input = input("You: ")
-        response = chatbot.get_response(user_input)
-        print(f"Bot: {response}")

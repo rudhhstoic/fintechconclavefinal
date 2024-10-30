@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dashboard.dart';
 import 'botpopup.dart';
 import 'personalinfo.dart';
+import 'statement_analyse.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardScreen(),
         '/botpopup': (context) => const ChatbotScreen(),
         '/personalinfo': (context) => const PersonalInfoScreen(),
+        '/statement_analyse': (context) => const UploadPage(),
       },
       initialRoute: '/',
     );
@@ -72,6 +74,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/dashboard');
               },
               child: const Text('Go to Dashboard'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/statement_analyse');
+              },
+              child: const Text('Go to Upload Page'),
             ),
           ],
         ),

@@ -1,0 +1,1 @@
+This upload folder is to receive the document uploaded by userand is removed oncess processed.

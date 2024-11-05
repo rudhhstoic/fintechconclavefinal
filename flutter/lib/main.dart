@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/management.dart';
 import 'dashboard.dart';
 import 'botpopup.dart';
 import 'personalinfo.dart';
 import 'statement_analyse.dart';
+import 'stock_predict.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,6 +30,8 @@ class MyApp extends StatelessWidget {
         '/botpopup': (context) => const ChatbotScreen(),
         '/personalinfo': (context) => const PersonalInfoScreen(),
         '/statement_analyse': (context) => const UploadPage(),
+        '/stock_predict': (context) => const StockAnalysisPage(),
+        '/management': (context) => const HomePage(),
       },
       initialRoute: '/',
     );
@@ -81,6 +85,20 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/statement_analyse');
               },
               child: const Text('Go to Upload Page'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/stock_predict');
+              },
+              child: const Text('Go to Stocks'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/management');
+              },
+              child: const Text('Go to management'),
             ),
           ],
         ),

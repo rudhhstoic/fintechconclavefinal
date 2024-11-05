@@ -15,8 +15,10 @@ driver.get("https://www.etmoney.com/mutual-funds/all-funds-listing")  # Adjust t
 time.sleep(5)  # Wait for the page to load
 
 if returns == 'Lumpsum':
-    driver.find_element(By.ID,"investment-mode").click()
-    driver.find_element(By.XPATH,"//*[@id='investment-mode-dropdown']/div/div/div/ul/li[2]").click()
+    #driver.find_element(By.ID,"investment-mode").click()
+    #driver.find_element(By.XPATH,"//*[@id='investment-mode-dropdown']/div/div/div/ul/li[2]").click()
+    driver.find_element('/html/body/div[1]/div[6]/div[3]/div[2]/div/div[1]/div[2]/div[2]/div[2]/div[2]/div[1]/div').click()
+    driver.find_element('/html/body/div[1]/div[6]/div[3]/div[2]/div/div[1]/div[2]/div[2]/div[2]/div[2]/div[1]/div/button[1]').click()
     time.sleep(5)
 
 name =[]

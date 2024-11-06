@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/management.dart';
-import 'dashboard.dart';
+//import 'dashboard.dart';
 import 'botpopup.dart';
 import 'personalinfo.dart';
 import 'statement_analyse.dart';
 import 'stock_predict.dart';
+import 'auth_provider.dart';
+import 'home_page.dart';
+import 'login_page.dart';
+import 'signup_page.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (_) =>
+                AuthProvider()), // Auth Provider for state management
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -25,13 +39,16 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routes: {
-        '/': (context) => const MyHomePage(title: 'Money Matters'),
-        '/dashboard': (context) => const DashboardScreen(),
+        '/': (context) => LoginScreen(),
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/dashboard': (context) => HomePage(),
+        //'/dashboard': (context) => const DashboardScreen(),
         '/botpopup': (context) => const ChatbotScreen(),
         '/personalinfo': (context) => const PersonalInfoScreen(),
         '/statement_analyse': (context) => const UploadPage(),
         '/stock_predict': (context) => const StockAnalysisPage(),
-        '/management': (context) => const HomePage(),
+        '/management': (context) => const HomeManage(),
       },
       initialRoute: '/',
     );

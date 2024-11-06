@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'budgets.dart';
+import 'analysis.dart';
 
 void main() {
   runApp(Management());
@@ -18,18 +20,19 @@ class Management extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Color(0xFFbdd0dc),
       ),
-      home: HomePage(),
+      home: HomeManage(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomeManage extends StatefulWidget {
+  const HomeManage({super.key});
   @override
-  HomePageState createState() => HomePageState();
+  HomeManageState createState() => HomeManageState();
 }
 
-class HomePageState extends State<HomePage> {
+class HomeManageState extends State<HomeManage> {
+  int _selectedIndex = 0;
   DateTime selectedDate = DateTime.now();
   List transactions = []; // Stores the transactions fetched
   double totalIncome = 0.0; // To store total income
@@ -39,6 +42,12 @@ class HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     fetchTransactions(); // Fetch transactions when page loads
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   void _goToPreviousMonth() {
@@ -87,146 +96,178 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  Widget _buildScreenContent() {
+    switch (_selectedIndex) {
+      case 1:
+        return HomePage(); // Display the Analysis screen
+      case 2:
+        return BudgetPage(serialId: 1); // Display the Budgets screen
+      default:
+        return buildHomeScreen(); // Default to the main screen
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    String monthYear = DateFormat('MMMM yyyy').format(selectedDate);
-    bool isNovember = selectedDate.month == 11;
     return Scaffold(
       appBar: AppBar(
         title: Text('Money Matters'),
         backgroundColor: Color(0xFF2d3e54),
       ),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back_ios),
-                onPressed: _goToPreviousMonth,
-              ),
-              Text(
-                monthYear,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                icon: Icon(Icons.arrow_forward_ios),
-                onPressed: _goToNextMonth,
-              ),
-            ],
+      body: _buildScreenContent(),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddTransactionPage()),
+                ).then((_) {
+                  fetchTransactions(); // Fetch transactions again after adding a new one
+                });
+              },
+              child: Icon(Icons.add),
+              backgroundColor: Color(0xFF2d3e54),
+            )
+          : null,
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: Text(
-                  'Income',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'Expense',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'Total',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Analysis',
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: Text(
-                  '₹${totalIncome.toStringAsFixed(2)}',
-                  style: TextStyle(color: Colors.green, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  '₹${totalExpense.toStringAsFixed(2)}',
-                  style: TextStyle(color: Colors.red, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  '₹${(totalIncome - totalExpense).toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: (totalIncome - totalExpense) >= 0
-                        ? Colors.green
-                        : Colors.red,
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-          Expanded(
-            child: !isNovember // Check if the month is November
-                ? Center(
-                    child: Text(
-                      'No transactions available',
-                      style: TextStyle(fontSize: 18, color: Color(0xFF547788)),
-                    ),
-                  )
-                : transactions.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No transactions available',
-                          style:
-                              TextStyle(fontSize: 15, color: Color(0xFF547788)),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: transactions.length,
-                        itemBuilder: (context, index) {
-                          final transaction = transactions[index];
-                          final isIncome = transaction['transaction_type'] ==
-                              'Income'; // Determine if it's income
-                          return ListTile(
-                            title: Text(transaction['category']),
-                            subtitle:
-                                Text('${transaction['transaction_date']}'),
-                            trailing: Text(
-                              '${isIncome ? '+' : '-'} ₹${transaction['amount']}',
-                              style: TextStyle(
-                                color: isIncome
-                                    ? Colors.green
-                                    : Colors.red, // Set color
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mobile_friendly),
+            label: 'Budgets',
           ),
         ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blueGrey,
+        onTap: _onItemTapped,
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 70.0),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AddTransactionPage()),
-            ).then((_) {
-              fetchTransactions(); // Fetch transactions again after adding a new one
-            });
-          },
-          child: Icon(Icons.add),
-          backgroundColor: Color(0xFF2d3e54),
+    );
+  }
+
+  Widget buildHomeScreen() {
+    String monthYear = DateFormat('MMMM yyyy').format(selectedDate);
+    bool isNovember = selectedDate.month == 11;
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back_ios),
+              onPressed: _goToPreviousMonth,
+            ),
+            Text(
+              monthYear,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: Icon(Icons.arrow_forward_ios),
+              onPressed: _goToNextMonth,
+            ),
+          ],
         ),
-      ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: Text(
+                'Income',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                'Expense',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                'Total',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: Text(
+                '₹${totalIncome.toStringAsFixed(2)}',
+                style: TextStyle(color: Colors.green, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                '₹${totalExpense.toStringAsFixed(2)}',
+                style: TextStyle(color: Colors.red, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                '₹${(totalIncome - totalExpense).toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: (totalIncome - totalExpense) >= 0
+                      ? Colors.green
+                      : Colors.red,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: !isNovember // Check if the month is November
+              ? Center(
+                  child: Text(
+                    'No transactions available',
+                    style: TextStyle(fontSize: 18, color: Color(0xFF547788)),
+                  ),
+                )
+              : transactions.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No transactions available',
+                        style:
+                            TextStyle(fontSize: 15, color: Color(0xFF547788)),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = transactions[index];
+                        final isIncome = transaction['transaction_type'] ==
+                            'Income'; // Determine if it's income
+                        return ListTile(
+                          title: Text(transaction['category']),
+                          subtitle: Text('${transaction['transaction_date']}'),
+                          trailing: Text(
+                            '${isIncome ? '+' : '-'} ₹${transaction['amount']}',
+                            style: TextStyle(
+                              color: isIncome
+                                  ? Colors.green
+                                  : Colors.red, // Set color
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+        ),
+      ],
     );
   }
 }

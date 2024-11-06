@@ -270,6 +270,65 @@ def get_budgets(serial_id):
         })
     return jsonify(output)
 
+@app.route('/income_category_analysis/<int:serial_id>', methods=['GET'])
+def income_category_analysis(serial_id):
+    # Query income transactions grouped by category
+    income_summary = db.session.query(
+        Record.category,
+        func.sum(Record.amount).label('total_amount')
+    ).filter(
+        Record.serial_id == serial_id,
+        Record.transaction_type == 'Income'
+    ).group_by(Record.category).all()
+
+    # Format the output as a list of dictionaries
+    output = [{'category': category, 'total_amount': float(total)} for category, total in income_summary]
+    
+    return jsonify(output)
+
+@app.route('/expense_category_analysis/<int:serial_id>', methods=['GET'])
+def expense_category_analysis(serial_id):
+    # Query expense transactions grouped by category
+    expense_summary = db.session.query(
+        Record.category,
+        func.sum(Record.amount).label('total_amount')
+    ).filter(
+        Record.serial_id == serial_id,
+        Record.transaction_type == 'Expense'
+    ).group_by(Record.category).all()
+
+    # Format the output as a list of dictionaries
+    output = [{'category': category, 'total_amount': float(total)} for category, total in expense_summary]
+    
+    return jsonify(output)
+
+@app.route('/income_vs_expense_analysis/<int:serial_id>', methods=['GET'])
+def income_vs_expense_analysis(serial_id):
+    # Calculate total income
+    total_income = db.session.query(
+        func.sum(Record.amount)
+    ).filter(
+        Record.serial_id == serial_id,
+        Record.transaction_type == 'Income'
+    ).scalar() or 0
+
+    # Calculate total expense
+    total_expense = db.session.query(
+        func.sum(Record.amount)
+    ).filter(
+        Record.serial_id == serial_id,
+        Record.transaction_type == 'Expense'
+    ).scalar() or 0
+
+    # Prepare the output
+    output = {
+        'total_income': float(total_income),
+        'total_expense': float(total_expense),
+        'net_balance': float(total_income - total_expense)
+    }
+
+    return jsonify(output)
+
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5004)
+   app.run(debug=True, host='0.0.0.0', port=5004)

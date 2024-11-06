@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import pandas as pd
 
-returns = input("Monthly/Lumpsum ?")
+#returns = input("Monthly/Lumpsum ?")
 #amt = input("Enter amt:")
 #dur = input("Duration")
 
@@ -14,12 +14,11 @@ driver = webdriver.Chrome(service =service)
 driver.get("https://www.etmoney.com/mutual-funds/all-funds-listing")  # Adjust this to the mutual funds page URL if different
 time.sleep(5)  # Wait for the page to load
 
-if returns == 'Lumpsum':
-    #driver.find_element(By.ID,"investment-mode").click()
-    #driver.find_element(By.XPATH,"//*[@id='investment-mode-dropdown']/div/div/div/ul/li[2]").click()
-    driver.find_element('/html/body/div[1]/div[6]/div[3]/div[2]/div/div[1]/div[2]/div[2]/div[2]/div[2]/div[1]/div').click()
-    driver.find_element('/html/body/div[1]/div[6]/div[3]/div[2]/div/div[1]/div[2]/div[2]/div[2]/div[2]/div[1]/div/button[1]').click()
-    time.sleep(5)
+#driver.find_element(By.ID,"investment-mode").click()
+#driver.find_element(By.XPATH,"//*[@id='investment-mode-dropdown']/div/div/div/ul/li[2]").click()
+driver.find_element(By.XPATH,'//html/body/div[1]/div[6]/div[3]/div[2]/div/div[1]/div[2]/div[2]/div[2]/div[2]/div[1]/div/i').click()
+driver.find_element(By.XPATH,'/html/body/div[1]/div[6]/div[3]/div[2]/div/div[1]/div[2]/div[2]/div[2]/div[2]/div[1]/div/button[1]').click()
+time.sleep(5)
 
 name =[]
 category =[]
@@ -32,13 +31,15 @@ expense_ratio =[]
 all =[]
 
 # Locate and fetch fund details
-for i in range(20):
+for i in range(0):
     driver.find_element(By.ID,"load_more_nav").click()
     time.sleep(2)
 scheme = driver.find_elements(By.CLASS_NAME,"scheme-name")
 cate = driver.find_elements(By.CLASS_NAME,"tag")
-amc = driver.find_elements(By.CLASS_NAME,"col-md-3.col-sm-4.col-xs-4.flex-col")
-
+'''amc = driver.find_elements(By.CLASS_NAME,"col-md-3.col-sm-4.col-xs-4.flex-col")'''
+ratio = driver.find_elements(By.CLASS_NAME,"col-md-3 col-sm-4 col-xs-4 flex-col mfFund-double")
+ages = driver.find_elements(By.CLASS_NAME,"col-md-3 col-sm-4 col-xs-4 flex-col hidden-xs hidden-sm mfFund-age")
+aum = driver.find_elements(By.CLASS_NAME,"col-md-3 col-sm-4 col-xs-4 flex-col")
 
 for i in scheme:
     v = str((i.text).split(','))
@@ -46,6 +47,12 @@ for i in scheme:
 for i in range(0,len(cate),2):
     v = [(cate[i].text).split(' '),(cate[i+1].text).split(' ')]
     category.append(v)
+for i in range(0,len(ratio),2):
+    v = str((i.text).split(','))
+    expense_ratio.append(v)
+for i in range(0,len(ages),2):
+    v = str((i.text).split(','))
+    age.append(v)
 
 '''
 #For lumpsum 
@@ -68,15 +75,9 @@ for j in all:
         i=2
     elif i==2:
         rpa.append(j)
-        i=3
-    elif i==3:
-        expense_ratio.append(j)
-        i=4
-    else:
-        age.append(j)
         i=0
 
-for i in amc:
+for i in aum:
     v = str((i.text).split(','))
     print(v)
     if 'AUM' in v:
@@ -89,13 +90,6 @@ for i in amc:
     elif 'Return' in v:
         v = v[2:len(v)-2]
         rpa.append(v.split('\\n')[1])
-    elif 'Expense' in v:
-        if '%' in v :
-            v = v[2:len(v)-2]
-            expense_ratio.append(v.split(' ')[2])
-    elif 'Age' in v:
-        v = v[2:len(v)-2]
-        age.append(v.split(' ')[1])
 
 print(len(name),len(category),len(AMC),len(curr_value),len(rpa),len(expense_ratio),len(age))
 df = pd.DataFrame({'Name':name, 'Category':category, 'AUM':AMC, 'Current value':curr_value, 'Return per annum':rpa, 'Expense ratio':expense_ratio, 'Age':age })

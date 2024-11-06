@@ -30,6 +30,24 @@ class BudgetPage extends StatefulWidget {
 class _BudgetPageState extends State<BudgetPage> {
   List<dynamic> budgets = [];
   bool isLoading = true;
+  final List<String> categories = [
+    'Beauty',
+    'Bills',
+    'Automobile',
+    'Clothing',
+    'Education',
+    'Entertainment',
+    'Food',
+    'Health',
+    'Home',
+    'Insurance',
+    'Groceries',
+    'Tax',
+    'Recharge',
+    'Transportation',
+    'Charity'
+  ];
+  String selectedCategory = 'Food';
 
   @override
   void initState() {
@@ -39,7 +57,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> fetchBudgets() async {
     final response = await http.get(
-      Uri.parse('http://10.10.16.104:5004/get_budgets/${widget.serialId}'),
+      Uri.parse('http://192.168.100.28:5004/get_budgets/${widget.serialId}'),
     );
 
     if (response.statusCode == 200) {
@@ -74,22 +92,46 @@ class _BudgetPageState extends State<BudgetPage> {
     }
   }
 
-  void showSetBudgetDialog(String category) {
+  void showSetBudgetDialog({String? initialCategory}) {
     TextEditingController limitController = TextEditingController();
-
+    selectedCategory = categories.contains(initialCategory)
+        ? initialCategory!
+        : categories.first;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Set Budget for $category"),
-        content: TextField(
-          controller: limitController,
-          decoration: InputDecoration(hintText: "Enter budget limit"),
-          keyboardType: TextInputType.number,
+        title: Text("Set Budget"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Category dropdown
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedCategory = newValue!;
+                });
+              },
+              items: categories.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              decoration: InputDecoration(labelText: "Select Category"),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: limitController,
+              decoration: InputDecoration(hintText: "Enter budget limit"),
+              keyboardType: TextInputType.number,
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () {
-              setBudget(category, limitController.text);
+              setBudget(selectedCategory, limitController.text);
               Navigator.of(context).pop();
             },
             child: Text("Set"),
@@ -131,7 +173,8 @@ class _BudgetPageState extends State<BudgetPage> {
                     trailing: IconButton(
                       icon: Icon(Icons.edit, color: Colors.green),
                       onPressed: () {
-                        showSetBudgetDialog(budget['category']);
+                        showSetBudgetDialog(
+                            initialCategory: budget['category']);
                       },
                     ),
                   ),
@@ -140,7 +183,7 @@ class _BudgetPageState extends State<BudgetPage> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showSetBudgetDialog("New Category"); // Customize as needed
+          showSetBudgetDialog();
         },
         child: Icon(Icons.add),
       ),

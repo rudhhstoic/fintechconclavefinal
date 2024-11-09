@@ -4,11 +4,12 @@ import 'package:flutter_application_1/management.dart';
 import 'botpopup.dart';
 import 'personalinfo.dart';
 import 'statement_analyse.dart';
-import 'stock_predict.dart';
+import 'stock.dart';
 import 'auth_provider.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
+import 'mutual_fund_page.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -47,8 +48,9 @@ class MyApp extends StatelessWidget {
         '/botpopup': (context) => const ChatbotScreen(),
         '/personalinfo': (context) => const PersonalInfoScreen(),
         '/statement_analyse': (context) => const UploadPage(),
-        '/stock_predict': (context) => const StockAnalysisPage(),
+        '/stock': (context) => StockPredictionPage(),
         '/management': (context) => const HomeManage(),
+        '/mutualfunds': (context) => MutualFundPage(),
       },
       initialRoute: '/',
     );

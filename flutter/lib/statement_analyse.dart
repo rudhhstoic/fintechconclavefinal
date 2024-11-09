@@ -52,7 +52,7 @@ class UploadPageState extends State<UploadPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://192.168.100.28:5001/upload'), // Replace with Flask IP
+        Uri.parse('http://127.0.0.1:5001/upload'), // Replace with Flask IP
       );
 
       request.fields['text'] = selectedBank!;

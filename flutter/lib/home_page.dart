@@ -113,6 +113,11 @@ class HomePageState extends State<HomePage> {
                       Navigator.pushNamed(context, '/statement_analyse');
                     } else if (_options[index] == 'Budget Planning') {
                       Navigator.pushNamed(context, '/management');
+                    } else if (_options[index] == 'Stock Prediction') {
+                      Navigator.pushNamed(context, '/stock');
+                    } else if (_options[index] ==
+                        'Mutual Fund Recommendation') {
+                      Navigator.pushNamed(context, '/mutualfunds');
                     }
                   },
                   child: Center(

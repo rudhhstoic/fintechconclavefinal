@@ -50,7 +50,7 @@ class StockAnalysisPageState extends State<StockAnalysisPage> {
 
   Future<void> fetchStockData() async {
     if (_selectedStock != null && _startDate != null && _endDate != null) {
-      final url = Uri.parse('http://192.168.100.28:5002/analyze_stock');
+      final url = Uri.parse('http://127.0.0.1:5002/analyze_stock');
       final dateFormat = DateFormat('MM/dd/yyyy');
       final response = await http.post(
         url,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'api_services.dart';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -35,6 +37,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     if (result['success']) {
+      int serialId = result['serial_id'];
+
+      // Save serialId to AuthProvider
+      Provider.of<AuthProvider>(context, listen: false).setSerialId(serialId);
       // Navigate to the login screen after successful registration
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {

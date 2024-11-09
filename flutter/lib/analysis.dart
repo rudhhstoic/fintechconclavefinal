@@ -3,7 +3,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() {
+/*void main() {
   runApp(MyApp());
 }
 
@@ -18,13 +18,13 @@ class MyApp extends StatelessWidget {
       home: HomePage(),
     );
   }
-}
+}*/
 
 class HomePage extends StatelessWidget {
+  final int serialId;
+  HomePage({required this.serialId});
   @override
   Widget build(BuildContext context) {
-    int serialId = 1; // Replace with actual serial ID
-
     return AnalysisPage(serialId: serialId);
   }
 }
@@ -56,15 +56,15 @@ class _AnalysisPageState extends State<AnalysisPage> {
     switch (selectedAnalysis) {
       case 'Income Category Analysis':
         url =
-            'http://192.168.100.28:5004/income_category_analysis/${widget.serialId}';
+            'http://127.0.0.1:5004/income_category_analysis/${widget.serialId}';
         break;
       case 'Expense Category Analysis':
         url =
-            'http://192.168.100.28:5004/expense_category_analysis/${widget.serialId}';
+            'http://127.0.0.1:5004/expense_category_analysis/${widget.serialId}';
         break;
       case 'Income vs Expense Analysis':
         url =
-            'http://192.168.100.28:5004/income_vs_expense_analysis/${widget.serialId}';
+            'http://127.0.0.1:5004/income_vs_expense_analysis/${widget.serialId}';
         break;
       default:
         return;

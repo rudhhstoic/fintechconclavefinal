@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl =
-      'http://192.168.100.28:5003'; // Make sure this is correct
+  final String baseUrl = 'http://127.0.0.1:5003'; // Make sure this is correct
 
   // Register method
   Future<Map<String, dynamic>> register(
@@ -47,7 +46,8 @@ class ApiService {
       return {
         'success': true,
         'token': responseData['token'],
-        'message': 'Login successful'
+        'message': 'Login successful',
+        'serial_id': responseData['serial_id']
       };
     } else {
       final Map<String, dynamic> responseData = json.decode(response.body);

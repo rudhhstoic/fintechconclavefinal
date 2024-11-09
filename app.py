@@ -2,13 +2,14 @@ import subprocess
 import os
 
 # List of Flask apps with their corresponding ports and hosts
-host = "192.168.100.28"
+host = "127.0.0.1"
 apps = [
     ("botflask.py", host, 5000),  # Runs on localhost:5000  
     ("statementflask.py", host, 5001),
     ("stock_predict.py", host, 5002),
     ("login_registerflask.py",host, 5003),
     ("managementflask.py", host, 5004),
+    ("sqlconnect.py",host,5005)
     # Add more apps as needed, with desired host and port
 ]
 

@@ -4,8 +4,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'budgets.dart';
 import 'analysis.dart';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart';
 
-void main() {
+/*void main() {
   runApp(Management());
 }
 
@@ -23,7 +25,7 @@ class Management extends StatelessWidget {
       home: HomeManage(),
     );
   }
-}
+}*/
 
 class HomeManage extends StatefulWidget {
   const HomeManage({super.key});
@@ -65,8 +67,10 @@ class HomeManageState extends State<HomeManage> {
   }
 
   Future<void> fetchTransactions() async {
+    final serialId =
+        Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     final url =
-        'http://192.168.100.28:5004/get_transaction/1'; // Replace with actual Flask URL
+        'http://127.0.0.1:5004/get_transaction/${serialId}'; // Replace with actual Flask URL
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -97,11 +101,13 @@ class HomeManageState extends State<HomeManage> {
   }
 
   Widget _buildScreenContent() {
+    final serialId =
+        Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     switch (_selectedIndex) {
       case 1:
-        return HomePage(); // Display the Analysis screen
+        return HomePage(serialId: serialId); // Display the Analysis screen
       case 2:
-        return BudgetPage(serialId: 1); // Display the Budgets screen
+        return BudgetPage(serialId: serialId); // Display the Budgets screen
       default:
         return buildHomeScreen(); // Default to the main screen
     }
@@ -289,13 +295,15 @@ class AddTransactionPageState extends State<AddTransactionPage> {
   bool shouldResetDisplay = false;
 
   Future<void> _saveTransaction() async {
+    final serialId =
+        Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     final transactionType = isIncome ? 'Income' : 'Expense';
-    final url = 'http://192.168.100.28:5004/add_transaction';
+    final url = 'http://127.0.0.1:5004/add_transaction';
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
-        'serial_id': 1, // Replace with dynamic serial_id if available
+        'serial_id': serialId, // Replace with dynamic serial_id if available
         'transaction_type': transactionType,
         'category': selectedCategory,
         'amount': double.parse(displayText),

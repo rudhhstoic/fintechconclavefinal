@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'signup_page.dart';
 import 'api_services.dart';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -20,8 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final List<String> _images = [
     'assets/image1.jpg',
-    'assets/image2.jpg',
-    'assets/image3.jpg',
+    //'assets/image2.jpg',
+    //'assets/image3.jpg',
   ];
   int _currentImageIndex = 0;
 
@@ -55,6 +57,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (result['success']) {
+      int serialId = result['serial_id'];
+
+      // Save serialId to AuthProvider
+      Provider.of<AuthProvider>(context, listen: false).setSerialId(serialId);
       Navigator.pushReplacementNamed(context, '/dashboard');
     }
   }
@@ -66,62 +72,63 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [const Color(0xFFB2DFDB), const Color(0xFF80CBC4)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                height: screenHeight * 0.4,
-                child: Stack(
-                  children: [
-                    Image.asset(
-                      _images[_currentImageIndex],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: screenHeight * 0.4,
-                    ),
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Row(
-                        children: [
-                          TextButton(
-                            onPressed: _login,
-                            child: Text(
-                              'Login',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RegisterScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'Sign Up',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        child: SingleChildScrollView(
+          // Wrap the entire body in a SingleChildScrollView
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [const Color(0xFFB2DFDB), const Color(0xFF80CBC4)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              Expanded(
-                child: Padding(
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: screenHeight * 0.4,
+                  child: Stack(
+                    children: [
+                      Image.asset(
+                        _images[_currentImageIndex],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: screenHeight * 0.4,
+                      ),
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: Row(
+                          children: [
+                            TextButton(
+                              onPressed: _login,
+                              child: Text(
+                                'Login',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Sign Up',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Form(
                     child: Column(
@@ -261,8 +268,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

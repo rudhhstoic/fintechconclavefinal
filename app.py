@@ -9,7 +9,9 @@ apps = [
     ("stock_predict.py", host, 5002),
     ("login_registerflask.py",host, 5003),
     ("managementflask.py", host, 5004),
-    ("sqlconnect.py",host,5005)
+    ("sqlconnect.py",host,5005),
+    ("tax.py",host,5006),
+    ("rem.py",host,5007)
     # Add more apps as needed, with desired host and port
 ]
 

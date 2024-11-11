@@ -118,6 +118,10 @@ class HomePageState extends State<HomePage> {
                     } else if (_options[index] ==
                         'Mutual Fund Recommendation') {
                       Navigator.pushNamed(context, '/mutualfunds');
+                    } else if (_options[index] == 'Tax Calculator') {
+                      Navigator.pushNamed(context, '/tax');
+                    } else if (_options[index] == 'Remainder Calendar') {
+                      Navigator.pushNamed(context, '/reminder');
                     }
                   },
                   child: Center(

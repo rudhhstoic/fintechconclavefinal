@@ -17,6 +17,7 @@ class UploadPageState extends State<UploadPage> {
   bool _isLoading = false;
   String? selectedBank;
   String recommendMessage = '';
+  List<dynamic> mutualFunds = [];
 
   final List<String> banks = [
     "SBI",
@@ -25,6 +26,26 @@ class UploadPageState extends State<UploadPage> {
     "HDFC",
     "Others"
   ]; // Bank options
+
+  Future<void> fetchMutualFunds() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'http://127.0.0.1:5005/mutualfunds')); // Replace with the correct endpoint
+      if (response.statusCode == 200) {
+        List<dynamic> fundsData = json.decode(response.body);
+        setState(() {
+          mutualFunds = fundsData
+              .where((fund) => fund['category']['main'] == 'EQUITY')
+              .take(3)
+              .toList();
+        });
+      } else {
+        print('Failed to load mutual funds');
+      }
+    } catch (e) {
+      print('Error fetching mutual funds: $e');
+    }
+  }
 
   Future<void> uploadFile() async {
     if (selectedBank == null) {
@@ -81,6 +102,7 @@ class UploadPageState extends State<UploadPage> {
             return ChartData(date, balance);
           }).toList();
         });
+        await fetchMutualFunds();
       }
     } finally {
       setState(() {
@@ -113,70 +135,200 @@ class UploadPageState extends State<UploadPage> {
         ],
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Dropdown for Bank Selection
-            DropdownButton<String>(
-              hint: Text("Select Bank"),
-              value: selectedBank,
-              items: banks.map((String bank) {
-                return DropdownMenuItem<String>(
-                  value: bank,
-                  child: Text(bank),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedBank = value;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : uploadFile,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Upload DOCX File'),
-            ),
-            const SizedBox(height: 20),
-            const Text('Balance Over Time'),
-            const SizedBox(height: 10),
-            Expanded(
-              child: chartData.isEmpty
-                  ? const Text('No data yet.')
-                  : SfCartesianChart(
-                      primaryXAxis: DateTimeAxis(
-                        title: AxisTitle(text: 'Date'),
-                        intervalType: DateTimeIntervalType.months,
-                        dateFormat: DateFormat('dd MMM yyyy'),
-                      ),
-                      primaryYAxis: NumericAxis(
-                        title: AxisTitle(text: 'Balance'),
-                        numberFormat: NumberFormat.currency(symbol: '₹'),
-                      ),
-                      tooltipBehavior: TooltipBehavior(enable: true),
-                      series: <ChartSeries>[
-                        LineSeries<ChartData, DateTime>(
-                          dataSource: chartData,
-                          xValueMapper: (ChartData data, _) => data.date,
-                          yValueMapper: (ChartData data, _) => data.balance,
-                          markerSettings: const MarkerSettings(isVisible: true),
-                          color: const Color.fromARGB(255, 51, 50, 50),
-                          width: 2,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Dropdown for Bank Selection
+              DropdownButton<String>(
+                hint: Text("Select Bank"),
+                value: selectedBank,
+                items: banks.map((String bank) {
+                  return DropdownMenuItem<String>(
+                    value: bank,
+                    child: Text(bank),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedBank = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isLoading ? null : uploadFile,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Upload DOCX File'),
+              ),
+              const SizedBox(height: 20),
+              const Text('Balance Over Time'),
+              const SizedBox(height: 10),
+              SizedBox(
+                child: chartData.isEmpty
+                    ? const Text('No data yet.')
+                    : SfCartesianChart(
+                        primaryXAxis: DateTimeAxis(
+                          title: AxisTitle(text: 'Date'),
+                          intervalType: DateTimeIntervalType.months,
+                          dateFormat: DateFormat('dd MMM yyyy'),
                         ),
-                      ],
-                    ),
-            ),
-            const SizedBox(height: 20),
-            // Display the recommendation message
-            Text(
-              recommendMessage,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20), // First empty line
-          ],
+                        primaryYAxis: NumericAxis(
+                          title: AxisTitle(text: 'Balance'),
+                          numberFormat: NumberFormat.currency(symbol: '₹'),
+                        ),
+                        tooltipBehavior: TooltipBehavior(enable: true),
+                        series: <ChartSeries>[
+                          LineSeries<ChartData, DateTime>(
+                            dataSource: chartData,
+                            xValueMapper: (ChartData data, _) => data.date,
+                            yValueMapper: (ChartData data, _) => data.balance,
+                            markerSettings:
+                                const MarkerSettings(isVisible: true),
+                            color: const Color.fromARGB(255, 51, 50, 50),
+                            width: 2,
+                          ),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: 20),
+              // Display the recommendation message
+              Text(
+                recommendMessage,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20), // First empty line
+              if (mutualFunds.isNotEmpty) ...[
+                const Text(
+                  'Recommended Schemes ',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: mutualFunds.length,
+                  itemBuilder: (context, index) {
+                    final fund = mutualFunds[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      color: const Color.fromARGB(
+                          255, 244, 244, 252), // Light background color
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fund['name'],
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              fund['category']['main'],
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              fund['category']['sub'],
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  children: [
+                                    const Text('1M'),
+                                    Icon(
+                                      Icons.arrow_upward,
+                                      color: Colors.green,
+                                      size: 16,
+                                    ),
+                                    Text(
+                                      '${fund['return_1_month']}%',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    const Text('3M'),
+                                    Icon(
+                                      Icons.arrow_upward,
+                                      color: Colors.green,
+                                      size: 16,
+                                    ),
+                                    Text(
+                                      '${fund['return_3_month']}%',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    const Text('6M'),
+                                    Icon(
+                                      Icons.arrow_upward,
+                                      color: Colors.green,
+                                      size: 16,
+                                    ),
+                                    Text(
+                                      '${fund['return_6_month']}%',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    const Text('1Y'),
+                                    Icon(
+                                      Icons.arrow_upward,
+                                      color: Colors.green,
+                                      size: 16,
+                                    ),
+                                    Text(
+                                      '${fund['return_per_annum']}%',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

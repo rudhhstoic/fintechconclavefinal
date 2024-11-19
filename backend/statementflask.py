@@ -29,12 +29,13 @@ def upload_file():
 
     recommend_message = recommend['overall_recommendations'][0]  # Extract the message string
     recommend_df = recommend['monthly_recommendations']
+    combined_df = combined_df.applymap(lambda x: str(x) if isinstance(x, pd.Period) else x)
+    recommend_df = recommend_df.applymap(lambda x: str(x) if isinstance(x, pd.Period) else x)
     
     # Convert DataFrame to JSON and return
     data_json = combined_df.to_dict(orient="records")
     recommend_data = recommend_df.to_dict(orient="records")
-
-    return jsonify(data=data_json, recommend_message=recommend_message) # if monthly analysis too needed give--> return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data)
+    return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data) # if monthly analysis too needed give--> return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data)
 
 #if __name__ == '__main__':
 #    app.run(debug=True, host='0.0.0.0', port = 5001)

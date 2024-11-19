@@ -11,7 +11,9 @@ apps = [
     ("managementflask.py", host, 5004),
     ("sqlconnect.py",host,5005),
     ("tax.py",host,5006),
-    ("rem.py",host,5007)
+    ("rem.py",host,5007),
+    ("article.py",host,5008),
+    ("predictions.py",host,5009)
     # Add more apps as needed, with desired host and port
 ]
 

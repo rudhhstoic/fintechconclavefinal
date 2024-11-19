@@ -13,6 +13,7 @@ class HomePageState extends State<HomePage> {
     'Mutual Fund Recommendation',
     'Tax Calculator',
     'Remainder Calendar',
+    'Articles',
   ];
 
   final List<Color> _colors = [
@@ -22,6 +23,7 @@ class HomePageState extends State<HomePage> {
     Colors.orangeAccent,
     Colors.purple,
     Colors.lightGreen,
+    Colors.tealAccent,
   ];
 
   final List<String> _images = [
@@ -31,6 +33,7 @@ class HomePageState extends State<HomePage> {
     'assets/image8.jpg',
     'assets/image9.jpg',
     'assets/image10.jpg',
+    'assets/image7.jpg',
   ];
 
   final List<String> _descriptions = [
@@ -40,6 +43,7 @@ class HomePageState extends State<HomePage> {
     'Get recommendations for mutual funds to grow your investments.',
     'Calculate your taxes easily and avoid last-minute hassles.',
     'Keep track of important dates and reminders in one place.',
+    'Read the articles and become expertise',
   ];
 
   @override
@@ -122,6 +126,8 @@ class HomePageState extends State<HomePage> {
                       Navigator.pushNamed(context, '/tax');
                     } else if (_options[index] == 'Remainder Calendar') {
                       Navigator.pushNamed(context, '/reminder');
+                    } else if (_options[index] == 'Articles') {
+                      Navigator.pushNamed(context, '/article');
                     }
                   },
                   child: Center(

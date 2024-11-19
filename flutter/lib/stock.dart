@@ -1,19 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-/*void main() {
-  runApp(MaterialApp(
-    home: StockPredictionPage(),
-    theme: ThemeData.light().copyWith(
-     dialogBackgroundColor: Color(0xFFB0C4DE), // Grey-blue background
-      textTheme: TextTheme(
-        bodyLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal),
-        bodyMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500),
-      ),
-    ),
-  ));
-}*/
+import 'package:syncfusion_flutter_charts/charts.dart'; // Import Syncfusion charts
 
 class StockPredictionPage extends StatefulWidget {
   @override
@@ -35,7 +23,6 @@ class _StockPredictionPageState extends State<StockPredictionPage>
   @override
   void initState() {
     super.initState();
-    // Animation controller for button scale effect
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 200));
     _buttonScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
@@ -45,8 +32,7 @@ class _StockPredictionPageState extends State<StockPredictionPage>
 
   // Function to send data to the backend and get prediction result
   Future<void> getPrediction() async {
-    final url = Uri.parse(
-        'http://127.0.0.1:5002/calculate_return'); // Change to your backend URL
+    final url = Uri.parse('http://127.0.0.1:5002/calculate_return');
 
     try {
       final response = await http.post(
@@ -78,7 +64,7 @@ class _StockPredictionPageState extends State<StockPredictionPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFB0C4DE), // Light grey-blue background
+      backgroundColor: Color(0xFFB0C4DE),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -135,7 +121,7 @@ class _StockPredictionPageState extends State<StockPredictionPage>
                   label: stockName,
                 ),
                 InvestmentInfoCard(
-                  amount: predictedAmount != null
+                  amount: niftyreturn != null
                       ? '₹${niftyreturn!.toStringAsFixed(2)}'
                       : '₹0.00',
                   label: 'NIFTY 50',
@@ -184,9 +170,8 @@ class _StockPredictionPageState extends State<StockPredictionPage>
                   ),
                   shadowColor: Colors.black.withOpacity(0.2),
                   elevation: 6,
-                  backgroundColor: Colors.blueAccent, // Background color
-                  foregroundColor:
-                      Colors.white, // Foreground color (text color)
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
                 ),
                 onPressed: () {
                   _controller.forward().then((_) => _controller.reverse());
@@ -195,6 +180,43 @@ class _StockPredictionPageState extends State<StockPredictionPage>
                 child: Text('Get Graph', style: TextStyle(fontSize: 16)),
               ),
             ),
+            SizedBox(height: 20),
+            // 3D Bar Chart using Syncfusion with conditional colors
+            if (predictedAmount != null && niftyreturn != null)
+              Container(
+                height: 300,
+                child: SfCartesianChart(
+                  primaryXAxis: CategoryAxis(),
+                  primaryYAxis: NumericAxis(isVisible: false),
+                  plotAreaBorderWidth: 0,
+                  series: <ChartSeries>[
+                    ColumnSeries<ChartData, String>(
+                      dataSource: [
+                        ChartData(
+                          'Nifty 50',
+                          niftyreturn!,
+                          niftyreturn! < investmentAmount
+                              ? Colors.red
+                              : Colors.green,
+                        ),
+                        ChartData(
+                          stockName,
+                          predictedAmount!,
+                          predictedAmount! < investmentAmount
+                              ? Colors.red
+                              : Colors.green,
+                        ),
+                      ],
+                      xValueMapper: (ChartData data, _) => data.label,
+                      yValueMapper: (ChartData data, _) => data.value,
+                      pointColorMapper: (ChartData data, _) => data.color,
+                      width: 0.5,
+                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                    ),
+                  ],
+                  tooltipBehavior: TooltipBehavior(enable: true),
+                ),
+              ),
           ],
         ),
       ),
@@ -202,7 +224,15 @@ class _StockPredictionPageState extends State<StockPredictionPage>
   }
 }
 
-// Custom widget for displaying investment information
+// Data model for chart
+class ChartData {
+  final String label;
+  final double value;
+  final Color color;
+
+  ChartData(this.label, this.value, this.color);
+}
+
 class InvestmentInfoCard extends StatelessWidget {
   final String amount;
   final String label;
@@ -239,7 +269,6 @@ class InvestmentInfoCard extends StatelessWidget {
   }
 }
 
-// Custom widget for period selection
 class PeriodSelector extends StatelessWidget {
   final String selectedPeriod;
   final ValueChanged<String> onPeriodSelected;
@@ -266,7 +295,6 @@ class PeriodSelector extends StatelessWidget {
   }
 }
 
-// Custom widget for input fields
 class StockInputField extends StatelessWidget {
   final String label;
   final String hint;

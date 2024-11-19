@@ -12,6 +12,7 @@ import 'signup_page.dart';
 import 'mutual_fund_page.dart';
 import 'tax_ip.dart';
 import 'reminder.dart';
+import 'article.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -55,6 +56,7 @@ class MyApp extends StatelessWidget {
         '/mutualfunds': (context) => MutualFundPage(),
         '/tax': (context) => TaxCalculatorInputPage(),
         '/reminder': (context) => ReminderPage(),
+        '/article': (context) => FinanceHomePage(),
       },
       initialRoute: '/',
     );

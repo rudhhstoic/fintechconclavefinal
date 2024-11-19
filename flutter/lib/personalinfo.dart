@@ -82,7 +82,7 @@ class PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     // Handle navigation or action for Need Help
                   }),
                   _buildOptionTile(Icons.logout, 'Logout', () {
-                    // Handle logout action
+                    Navigator.pushNamed(context, '/login');
                   }),
                 ],
               ),

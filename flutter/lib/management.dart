@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'budgets.dart';
+import 'vacation.dart';
 import 'analysis.dart';
 import 'package:provider/provider.dart';
 import 'auth_provider.dart';
@@ -108,6 +109,8 @@ class HomeManageState extends State<HomeManage> {
         return HomePage(serialId: serialId); // Display the Analysis screen
       case 2:
         return BudgetPage(serialId: serialId); // Display the Budgets screen
+      case 3:
+        return VacationPage(serialId: serialId);
       default:
         return buildHomeScreen(); // Default to the main screen
     }
@@ -149,9 +152,14 @@ class HomeManageState extends State<HomeManage> {
             icon: Icon(Icons.mobile_friendly),
             label: 'Budgets',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.savings),
+            label: 'Savings',
+          ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blueGrey,
+        selectedItemColor: const Color.fromARGB(255, 199, 28, 28),
+        unselectedItemColor: const Color.fromARGB(255, 45, 46, 46),
         onTap: _onItemTapped,
       ),
     );

@@ -47,6 +47,7 @@ dependencies:
   flutter_slidable : ^0.6.0
   shared_preferences: ^2.0.15
   cupertino_icons: ^1.0.8
+  google_fonts: ^4.0.5
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +85,11 @@ flutter:
       - assets/image10.jpg
       - assets/image11.png
       - assets/image12.jpg
+      - assets/bg2.jpg
+      - assets/background.jpg
+      - assets/logo2.jpg
+      - assets/supbg2.jpg
+      - assets/13.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

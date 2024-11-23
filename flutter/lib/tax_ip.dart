@@ -3,7 +3,7 @@ import 'package:flutter_application_1/tax_calculate.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-/*void main() {
+void main() {
   runApp(const MyApp());
 }
 
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       home: TaxCalculatorInputPage(),
     );
   }
-}*/
+}
 
 class TaxCalculatorInputPage extends StatefulWidget {
   const TaxCalculatorInputPage({super.key});

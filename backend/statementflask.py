@@ -35,7 +35,11 @@ def upload_file():
     # Convert DataFrame to JSON and return
     data_json = combined_df.to_dict(orient="records")
     recommend_data = recommend_df.to_dict(orient="records")
-    return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data) # if monthly analysis too needed give--> return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data)
+
+    total_credit_values = [entry.get('total_credit', 0) for entry in recommend_data if isinstance(entry.get('total_credit', None), (int, float))]
+    average_total_credit = sum(total_credit_values) / len(total_credit_values) if total_credit_values else 0
+
+    return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data, average_total_credit=average_total_credit) # if monthly analysis too needed give--> return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data)
 
 #if __name__ == '__main__':
 #    app.run(debug=True, host='0.0.0.0', port = 5001)

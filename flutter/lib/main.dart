@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         //'/dashboard': (context) => const DashboardScreen(),
         '/botpopup': (context) => const ChatbotScreen(),
         '/personalinfo': (context) => const PersonalInfoScreen(),
-        '/statement_analyse': (context) => const UploadPage(),
+        '/statement_analyse': (context) => UploadPage(),
         '/stock': (context) => StockPredictionPage(),
         '/management': (context) => const HomeManage(),
         '/mutualfunds': (context) => MutualFundPage(),

@@ -1,7 +1,25 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:syncfusion_flutter_charts/charts.dart'; // Import Syncfusion charts
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Budget App',
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+      ),
+      home: StockPredictionPage(), // Replace 123 with the actual serialId
+    );
+  }
+}
 
 class StockPredictionPage extends StatefulWidget {
   @override
@@ -11,14 +29,25 @@ class StockPredictionPage extends StatefulWidget {
 class _StockPredictionPageState extends State<StockPredictionPage>
     with TickerProviderStateMixin {
   String selectedPeriod = '1 wk';
+  String? selectedCompany;
+  String? stockSymbol;
   String stockName = 'ENTER THE STOCK NAME';
   double investmentAmount = 0;
   double? predictedAmount;
   double? absoluteReturn;
   double? percentReturn;
+
   double? niftyreturn;
   late AnimationController _controller;
   late Animation<double> _buttonScaleAnimation;
+
+  final Map<String, String> companyTickerMap = {
+    "Apple": "AAPL",
+    "Google": "GOOGL",
+    "Amazon": "AMZN",
+    "Microsoft": "MSFT",
+    "Tesla": "TSLA",
+  };
 
   @override
   void initState() {
@@ -39,7 +68,7 @@ class _StockPredictionPageState extends State<StockPredictionPage>
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "stockName": stockName,
+          "stockName": stockSymbol,
           "investmentAmount": investmentAmount,
           "period": selectedPeriod,
         }),
@@ -70,7 +99,9 @@ class _StockPredictionPageState extends State<StockPredictionPage>
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
         ),
         title: Text(
           'Calculate potential returns',
@@ -138,16 +169,26 @@ class _StockPredictionPageState extends State<StockPredictionPage>
               },
             ),
             SizedBox(height: 20),
-            StockInputField(
-              label: 'Stock name',
-              hint: stockName,
-              icon: Icons.search,
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                  labelText: 'select company',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12))),
+              items: companyTickerMap.keys.map((company) {
+                return DropdownMenuItem<String>(
+                  value: company,
+                  child: Text(company),
+                );
+              }).toList(),
+              value: selectedCompany,
               onChanged: (value) {
                 setState(() {
-                  stockName = value;
+                  selectedCompany = value;
+                  stockSymbol = companyTickerMap[value];
                 });
               },
             ),
+
             SizedBox(height: 10),
             StockInputField(
               label: 'Your investment amount',
@@ -186,11 +227,33 @@ class _StockPredictionPageState extends State<StockPredictionPage>
               Container(
                 height: 300,
                 child: SfCartesianChart(
-                  primaryXAxis: CategoryAxis(),
-                  primaryYAxis: NumericAxis(isVisible: false),
+                  primaryXAxis: CategoryAxis(
+                    isVisible: true,
+                    axisLine: AxisLine(
+                      color: Colors.black, // Dark color for the X-axis line
+                      width: 1, // Increase the width for a bolder line
+                    ),
+                    labelStyle: TextStyle(
+                      color: Colors.black, // Darken the X-axis labels
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  primaryYAxis: NumericAxis(
+                    isVisible: true,
+                    axisLine: AxisLine(
+                      color: Colors.black, // Dark color for the Y-axis line
+                      width: 1, // Increase the width for a bolder line
+                    ),
+                    labelStyle: TextStyle(
+                      color: Colors.black, // Darken the Y-axis labels
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   plotAreaBorderWidth: 0,
+                  legend: Legend(isVisible: true),
+                  tooltipBehavior: TooltipBehavior(enable: true),
                   series: <ChartSeries>[
-                    ColumnSeries<ChartData, String>(
+                    StackedColumnSeries<ChartData, String>(
                       dataSource: [
                         ChartData(
                           'Nifty 50',
@@ -209,12 +272,28 @@ class _StockPredictionPageState extends State<StockPredictionPage>
                       ],
                       xValueMapper: (ChartData data, _) => data.label,
                       yValueMapper: (ChartData data, _) => data.value,
+                      name: 'Return',
                       pointColorMapper: (ChartData data, _) => data.color,
                       width: 0.5,
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                      borderWidth: 1.5, // Set the border width
+                      borderColor: Colors.black, // Set the border color
+                    ),
+                    StackedColumnSeries<ChartData, String>(
+                      dataSource: [
+                        ChartData('Nifty 50', investmentAmount,
+                            const Color.fromARGB(255, 17, 111, 169)),
+                        ChartData(stockName, investmentAmount,
+                            const Color.fromARGB(255, 17, 111, 169)),
+                      ],
+                      xValueMapper: (ChartData data, _) => data.label,
+                      yValueMapper: (ChartData data, _) => data.value,
+                      name: 'Investment',
+                      pointColorMapper: (ChartData data, _) => data.color,
+                      width: 0.5,
+                      borderWidth: 1.5, // Set the border width
+                      borderColor: Colors.black, // Set the border color
                     ),
                   ],
-                  tooltipBehavior: TooltipBehavior(enable: true),
                 ),
               ),
           ],

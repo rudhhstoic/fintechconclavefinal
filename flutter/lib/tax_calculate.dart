@@ -1,4 +1,6 @@
+import 'dart:convert'; // For JSON decoding
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class TaxResultPage extends StatefulWidget {
@@ -17,8 +19,9 @@ class TaxResultPage extends StatefulWidget {
 }
 
 class _TaxResultPageState extends State<TaxResultPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  List<dynamic> mutualFunds = []; // List to store mutual fund schemes
 
   @override
   void initState() {
@@ -27,6 +30,7 @@ class _TaxResultPageState extends State<TaxResultPage>
       duration: Duration(seconds: 2),
       vsync: this,
     )..forward();
+    fetchMutualFunds(); // Fetch mutual funds when the page loads
   }
 
   @override
@@ -35,15 +39,36 @@ class _TaxResultPageState extends State<TaxResultPage>
     super.dispose();
   }
 
+  // Function to fetch mutual fund data from the API
+  Future<void> fetchMutualFunds() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://127.0.0.1:5005/mutualfunds'));
+      if (response.statusCode == 200) {
+        List<dynamic> fundsData = json.decode(response.body);
+        setState(() {
+          mutualFunds = fundsData
+              .where((fund) => fund['category']['sub'] == 'ELSS')
+              .take(3)
+              .toList();
+        });
+      } else {
+        print('Failed to load mutual funds');
+      }
+    } catch (e) {
+      print('Error fetching mutual funds: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Tax Calculation Result'),
-        backgroundColor: Colors.lightBlue, // Light Blue AppBar
+        backgroundColor: Colors.lightBlue,
       ),
       body: Container(
-        color: Color(0xFFEDE7F6), // Cool Gray background color
+        color: Color(0xFFEDE7F6),
         padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
@@ -62,7 +87,7 @@ class _TaxResultPageState extends State<TaxResultPage>
                     padding: EdgeInsets.all(16.0),
                     constraints: BoxConstraints(
                       minWidth: double.infinity,
-                      minHeight: 200, // Increase this height as needed
+                      minHeight: 200,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +97,7 @@ class _TaxResultPageState extends State<TaxResultPage>
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF333333), // Charcoal text color
+                            color: Color(0xFF333333),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -114,7 +139,7 @@ class _TaxResultPageState extends State<TaxResultPage>
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333), // Charcoal text color
+                          color: Color(0xFF333333),
                         ),
                       ),
                       SizedBox(height: 10),
@@ -144,6 +169,92 @@ class _TaxResultPageState extends State<TaxResultPage>
                   ),
                 ),
               ),
+              // Display mutual fund recommendations
+              if (mutualFunds.isNotEmpty) ...[
+                SizedBox(height: 20),
+                Text(
+                  'Recommended Mutual Fund Schemes',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: mutualFunds.length,
+                  itemBuilder: (context, index) {
+                    final fund = mutualFunds[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      color: Color.fromARGB(255, 244, 244, 252),
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fund['name'],
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              fund['category']['main'],
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.blue),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              fund['category']['sub'],
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.orange),
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  children: [
+                                    Text('1M'),
+                                    Icon(Icons.arrow_upward,
+                                        color: Colors.green, size: 16),
+                                    Text('${fund['return_1_month']}%'),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    Text('3M'),
+                                    Icon(Icons.arrow_upward,
+                                        color: Colors.green, size: 16),
+                                    Text('${fund['return_3_month']}%'),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    Text('6M'),
+                                    Icon(Icons.arrow_upward,
+                                        color: Colors.green, size: 16),
+                                    Text('${fund['return_6_month']}%'),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    Text('1Y'),
+                                    Icon(Icons.arrow_upward,
+                                        color: Colors.green, size: 16),
+                                    Text('${fund['return_per_annum']}%'),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ],
           ),
         ),

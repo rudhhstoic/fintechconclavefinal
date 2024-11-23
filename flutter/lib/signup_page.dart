@@ -13,15 +13,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
-
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isObscure = true;
   String _message = '';
+  bool _isHovered = false; // Variable to track hover state
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() {
       _isLoading = true;
     });
@@ -38,10 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result['success']) {
       int serialId = result['serial_id'];
-
-      // Save serialId to AuthProvider
       Provider.of<AuthProvider>(context, listen: false).setSerialId(serialId);
-      // Navigate to the login screen after successful registration
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,61 +49,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          // Left side for signup details
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Step In, Predict Better, Invest Smarter',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Username label and field
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Email',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/supbg2.jpg', // Update with your image path
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          // Signup Box Overlay
+          Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+              child: Container(
+                padding: EdgeInsets.all(20.0),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(
+                      0.6), // Darkened background for a professional look
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
                         ),
-                        SizedBox(height: 4),
-                        Container(
-                          width: screenWidth * 0.2,
-                          child: TextFormField(
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Step In, Predict Better, Invest Smarter',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+
+                      // Username label and field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Email',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          SizedBox(height: 4),
+                          TextFormField(
                             controller: _usernameController,
                             decoration: InputDecoration(
-                              hintText: 'Enter your Email ID',
+                              hintText: '',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(
+                                  0.2), // Muted white with transparency
                             ),
                             keyboardType: TextInputType.emailAddress,
+                            style: TextStyle(color: Colors.white),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your email';
@@ -119,36 +129,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
+                        ],
+                      ),
+                      SizedBox(height: 20),
 
-                    // Password label and field
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Password',
-                          style: TextStyle(color: Colors.black, fontSize: 16),
-                        ),
-                        SizedBox(height: 4),
-                        Container(
-                          width: screenWidth * 0.2,
-                          child: TextFormField(
+                      // Password label and field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Password',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          SizedBox(height: 4),
+                          TextFormField(
                             controller: _passwordController,
                             obscureText: _isObscure,
                             decoration: InputDecoration(
-                              hintText: 'Enter your Password',
+                              hintText: '',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.2),
                               suffixIcon: IconButton(
                                 icon: FaIcon(
                                   _isObscure
                                       ? FontAwesomeIcons.eyeSlash
                                       : FontAwesomeIcons.eye,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -157,6 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 },
                               ),
                             ),
+                            style: TextStyle(color: Colors.white),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your password';
@@ -166,49 +176,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
+                        ],
+                      ),
+                      SizedBox(height: 20),
 
-                    // Sign Up button
-                    SizedBox(
-                      width: screenWidth * 0.2,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _register,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: _isLoading
-                              ? CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : Text(
-                                  'Sign Up',
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      // Sign Up button with hover effect
+                      MouseRegion(
+                        onEnter: (_) {
+                          setState(() {
+                            _isHovered = true;
+                          });
+                        },
+                        onExit: (_) {
+                          setState(() {
+                            _isHovered = false;
+                          });
+                        },
+                        child: SizedBox(
+                          width: screenWidth * 0.6,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _register,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _isHovered
+                                  ? Colors.red
+                                  : Colors.blueGrey, // Change color on hover
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16.0),
+                              child: _isLoading
+                                  ? CircularProgressIndicator(
+                                      color: Colors.white)
+                                  : Text(
+                                      'Sign Up',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          color: _isHovered
+                                              ? Colors.black
+                                              : Colors
+                                                  .white), // Change text color on hover
+                                    ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Right side for image
-          Expanded(
-            flex: 1,
-            child: Container(
-              height: screenHeight,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                      'assets/image4.jpg'), // Update with your image path
-                  fit: BoxFit.cover,
+                    ],
+                  ),
                 ),
               ),
             ),

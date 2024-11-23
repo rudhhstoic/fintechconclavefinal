@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify
 import yfinance as yf
 from datetime import datetime, timedelta
@@ -63,5 +64,5 @@ def calculate_return():
 
     return jsonify(result)
 
-#if __name__ == '__main__':
-#    app.run(debug=True, host='0.0.0.0', port=5002)
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5002)

@@ -4,6 +4,25 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Budget App',
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+      ),
+      home: UploadPage(), // Replace 123 with the actual serialId
+    );
+  }
+}
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -18,6 +37,7 @@ class UploadPageState extends State<UploadPage> {
   String? selectedBank;
   String recommendMessage = '';
   List<dynamic> mutualFunds = [];
+  List<dynamic> recommendations = [];
 
   final List<String> banks = [
     "SBI",
@@ -103,11 +123,76 @@ class UploadPageState extends State<UploadPage> {
           }).toList();
         });
         await fetchMutualFunds();
+        // Calculate total credit based on chart data (last balance)
+        double totalCredit = jsonResponse['average_total_credit'] ?? 0.0;
+
+        // Fetch budget recommendations using the calculated totalCredit
+        await fetchBudgetRecommendations(totalCredit);
       }
     } finally {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // Method to fetch budget recommendations
+  Future<void> fetchBudgetRecommendations(double totalCredit) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final int totalCreditInt = totalCredit.toInt();
+      print(totalCreditInt);
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:5010/recommend_budgets/$totalCreditInt'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          recommendations = json.decode(response.body);
+        });
+      } else {
+        print('Failed to fetch recommendations');
+      }
+    } catch (e) {
+      print('Error fetching recommendations: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Method to add a budget
+  Future<void> addBudget(String category, double limit) async {
+    final serialId =
+        Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://127.0.0.1:5010/add_budget/$serialId'), // Replace '1' with the actual user ID
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'category': category,
+          'recommended_limit': limit,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          // Remove the added budget from the list of recommendations
+          recommendations.removeWhere((rec) => rec['category'] == category);
+        });
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Budget added successfully')));
+      } else {
+        print('Failed to add budget');
+      }
+    } catch (e) {
+      print('Error adding budget: $e');
     }
   }
 
@@ -319,6 +404,50 @@ class UploadPageState extends State<UploadPage> {
                                   ],
                                 ),
                               ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+              const SizedBox(height: 20),
+              if (recommendations.isNotEmpty) ...[
+                const Text(
+                  'Budget Recommendations ',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: recommendations.length,
+                  itemBuilder: (context, index) {
+                    final recommendation = recommendations[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      color: const Color.fromARGB(255, 244, 244, 252),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              recommendation['category'],
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              '₹${recommendation['recommended_limit']}',
+                              style: const TextStyle(
+                                  fontSize: 16, color: Colors.green),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: () {
+                                addBudget(recommendation['category'],
+                                    recommendation['recommended_limit']);
+                              },
                             ),
                           ],
                         ),

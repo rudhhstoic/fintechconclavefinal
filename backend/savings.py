@@ -7,15 +7,7 @@ from sklearn.model_selection import train_test_split
 class save_model:
     def __init__(self):
         # Sample dataset
-        data = {
-            "Place": ["Paris", "Bali", "Tokyo", "New York", "Paris", "Bali"],
-            "Time Range": ["Apr-Jun", "May-Aug", "Sep-Nov", "Dec-Feb", "Apr-Jun", "May-Aug"],
-            "Days": [5, 7, 3, 4, 6, 10],
-            "Avg Daily Cost": [150, 100, 200, 180, 150, 100],
-            "Budget Range": [1000, 1200, 1400, 1500, 1200, 2000],
-            "Air cost": [25000,20000,50000,35000,40000,30000 ],
-            "Popularity": [9.2, 8.7, 9.0, 8.5, 9.2, 8.7]
-        }
+        data = pd.read_csv(r"E:\FinTech\backend\uploads\budgeting_data_processed.csv")
         self.df = pd.DataFrame(data)
 
         # Encoding categorical features
@@ -25,7 +17,7 @@ class save_model:
         self.df['Time_encoded'] = self.le_time.fit_transform(self.df['Time Range'])
 
         # Prepare features and target
-        X = self.df[['Place_encoded', 'Time_encoded', 'Days', 'Avg Daily Cost', 'Air cost','Popularity']]
+        X = self.df[['Place_encoded', 'Time_encoded', 'Days', 'Avg Daily Cost', 'Air Cost','Popularity']]
         y = self.df['Budget Range']
 
         # Split the dataset

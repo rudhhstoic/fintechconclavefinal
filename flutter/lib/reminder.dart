@@ -27,17 +27,44 @@ class HomeReminder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
-      ),
-      body: Center(
-        child: ElevatedButton(
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Manage Reminders',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ReminderPage()),
-            );
+            Navigator.pop(context); // Navigate back to the previous screen
           },
-          child: Text('Manage Reminders'),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ReminderPage()),
+              );
+            },
+            child: Text('Manage Reminders'),
+          ),
         ),
       ),
     );
@@ -45,7 +72,7 @@ class HomeReminder extends StatelessWidget {
 }
 
 class ReminderService {
-  final String baseUrl = 'http://127.0.0.1:5007';
+  final String baseUrl = 'http://127.0.0.1:5000';
 
   Future<void> setReminder(
       int userId, String date, String description, String mobileno) async {
@@ -259,74 +286,103 @@ class _ReminderPageState extends State<ReminderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manage Reminders'),
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Finance Bot',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Fields for creating or updating a reminder
-            TextField(
-              controller: _mobilenoController,
-              decoration: InputDecoration(labelText: 'Mobile Number'),
-              keyboardType: TextInputType.phone,
-            ),
-            TextField(
-              controller: _dateController,
-              decoration:
-                  InputDecoration(labelText: 'Date (yyyy-mm-dd hh:mm:ss)'),
-            ),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _setReminder,
-              child: _isLoading
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Fields for creating or updating a reminder
+              TextField(
+                controller: _mobilenoController,
+                decoration: InputDecoration(labelText: 'Mobile Number'),
+                keyboardType: TextInputType.phone,
+              ),
+              TextField(
+                controller: _dateController,
+                decoration:
+                    InputDecoration(labelText: 'Date (yyyy-mm-dd hh:mm:ss)'),
+              ),
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _setReminder,
+                child: _isLoading
+                    ? CircularProgressIndicator()
+                    : Text('Set Reminder'),
+              ),
+              SizedBox(height: 20),
+              // Display the existing reminders
+              _isLoading
                   ? CircularProgressIndicator()
-                  : Text('Set Reminder'),
-            ),
-            SizedBox(height: 20),
-            // Display the existing reminders
-            _isLoading
-                ? CircularProgressIndicator()
-                : Expanded(
-                    child: ListView.builder(
-                      itemCount: _reminders.length,
-                      itemBuilder: (context, index) {
-                        final reminder = _reminders[index];
-                        return ListTile(
-                          title: Text(reminder['description']),
-                          subtitle: Text('Date: ${reminder['date']}'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit),
-                                onPressed: () {
-                                  _mobilenoController.text =
-                                      reminder['mobileno'];
-                                  _dateController.text = reminder['date'];
-                                  _descriptionController.text =
-                                      reminder['description'];
-                                  _updateReminder(reminder['id']);
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () {
-                                  _deleteReminder(reminder['id']);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: _reminders.length,
+                        itemBuilder: (context, index) {
+                          final reminder = _reminders[index];
+                          return ListTile(
+                            title: Text(reminder['description']),
+                            subtitle: Text('Date: ${reminder['date']}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit),
+                                  onPressed: () {
+                                    _mobilenoController.text =
+                                        reminder['mobileno'];
+                                    _dateController.text = reminder['date'];
+                                    _descriptionController.text =
+                                        reminder['description'];
+                                    _updateReminder(reminder['id']);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.delete,
+                                  ),
+                                  onPressed: () {
+                                    _deleteReminder(reminder['id']);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-          ],
+            ],
+          ),
         ),
       ),
     );

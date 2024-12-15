@@ -5,7 +5,7 @@ import 'mutual_fund_page.dart';
 class MutualFundService {
   Future<List<MutualFund>> fetchMutualFunds() async {
     final response =
-        await http.get(Uri.parse('http://127.0.0.1:5005/mutualfunds'));
+        await http.get(Uri.parse('http://127.0.0.1:5000/mutualfunds'));
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);

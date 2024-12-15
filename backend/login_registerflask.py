@@ -50,8 +50,10 @@ def register():
         cur.execute("INSERT INTO customer (username, password) VALUES (%s, %s) RETURNING serial_id", 
                     (username, hashed_password.decode('utf-8')))
         serial_id = cur.fetchone()[0]
+        print(f"Username: {username}, Serial ID: {serial_id}")
+
         conn.commit()
-        return jsonify({'message': 'User registered successfully', 'serial_id' : serial_id}), 201
+        return jsonify({'message': 'User registered successfully', 'serial_id' : serial_id, 'username': username}), 201
     except psycopg2.IntegrityError:
         conn.rollback()  # In case of username conflict or error
         return jsonify({'message': 'Username already exists'}), 409

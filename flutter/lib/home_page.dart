@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,11 +22,11 @@ class HomePageState extends State<HomePage>
   final List<String> _images = [
     'assets/image6.jpg',
     'assets/image12.jpg',
-    'assets/image7.jpg',
+    'assets/stock.jpg',
     'assets/image8.jpg',
-    'assets/image9.jpg',
+    'assets/tax.jpg',
     'assets/image10.jpg',
-    'assets/image11.png',
+    'assets/image11.jpg',
   ];
 
   final List<String> _descriptions = [
@@ -41,6 +42,7 @@ class HomePageState extends State<HomePage>
   final PageController _pageController = PageController();
   late Timer _scrollTimer;
   late AnimationController _animationController;
+  bool _isDarkMode = true; // Flag to track theme mode
 
   @override
   void initState() {
@@ -69,6 +71,12 @@ class HomePageState extends State<HomePage>
     _scrollTimer.cancel();
   }
 
+  void _toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
+  }
+
   @override
   void dispose() {
     _scrollTimer.cancel();
@@ -81,7 +89,7 @@ class HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Color.fromARGB(255, 0, 8, 49),
         title: const Text(
           'FinBuild',
           style: TextStyle(
@@ -101,29 +109,51 @@ class HomePageState extends State<HomePage>
               Navigator.pushNamed(context, '/personalinfo');
             },
           ),
+          IconButton(
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              color: Colors.white,
+            ),
+            onPressed: _toggleTheme, // Toggle between light and dark themes
+          ),
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.black, Colors.redAccent],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+        decoration: BoxDecoration(
+          gradient: _isDarkMode
+              ? const LinearGradient(
+                  colors: [Colors.black, Colors.redAccent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Colors.lightBlue, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
         ),
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Welcome to Money Matters!',
-                style: const TextStyle(
-                  fontFamily: 'Playfair Display',
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.redAccent,
+              child: Center(
+                child: AnimatedTextKit(
+                  animatedTexts: [
+                    TypewriterAnimatedText(
+                      'Welcome to FinBuild!',
+                      textStyle: TextStyle(
+                        fontFamily: 'Playfair Display',
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: _isDarkMode ? Colors.redAccent : Colors.black,
+                      ),
+                      speed: const Duration(milliseconds: 100),
+                    ),
+                  ],
+                  isRepeatingAnimation: true,
+                  repeatForever: true,
+                  pause: const Duration(milliseconds: 500),
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
             Expanded(
@@ -158,13 +188,20 @@ class HomePageState extends State<HomePage>
                           padding: const EdgeInsets.all(20),
                           margin: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
+                            color: _isDarkMode
+                                ? Colors.black.withOpacity(0.7)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            border:
-                                Border.all(color: Colors.redAccent, width: 2),
+                            border: Border.all(
+                                color: _isDarkMode
+                                    ? Colors.redAccent
+                                    : Colors.blue,
+                                width: 2),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.redAccent.withOpacity(0.5),
+                                color: _isDarkMode
+                                    ? Colors.redAccent.withOpacity(0.5)
+                                    : Colors.blue.withOpacity(0.5),
                                 spreadRadius: 2,
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
@@ -183,20 +220,24 @@ class HomePageState extends State<HomePage>
                               const SizedBox(height: 10),
                               Text(
                                 _options[index],
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Playfair Display',
-                                  color: Colors.white,
+                                  color: _isDarkMode
+                                      ? Colors.white
+                                      : Colors.black, // Adjust text color
                                 ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 10),
                               Text(
                                 _descriptions[index],
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.white70,
+                                  color: _isDarkMode
+                                      ? Colors.white70
+                                      : Colors.black87, // Adjust text color
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -220,7 +261,9 @@ class HomePageState extends State<HomePage>
           ),
         ),
         child: FloatingActionButton(
-          backgroundColor: Colors.redAccent,
+          backgroundColor: _isDarkMode
+              ? Colors.redAccent
+              : Colors.blue, // Toggle button color
           onPressed: () {
             Navigator.pushNamed(context, '/botpopup');
           },

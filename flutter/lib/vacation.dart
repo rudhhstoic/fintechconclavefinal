@@ -33,7 +33,31 @@ class _VacationPageState extends State<VacationPage> {
   final TextEditingController budgetController = TextEditingController();
   final TextEditingController daysController = TextEditingController();
   final TextEditingController transportCostController = TextEditingController();
-  final List<String> places = ["Paris", "Tokyo", "New York"]; // Example places
+  final List<String> places = [
+    'Dubai',
+    'Pune',
+    'Jaipur',
+    'Bangkok',
+    'Istanbul',
+    'London',
+    'New York',
+    'Paris',
+    'Hyderabad',
+    'Sydney',
+    'Tokyo',
+    'Chennai',
+    'Singapore',
+    'Kerala',
+    'Delhi',
+    'Bangalore',
+    'Rome',
+    'Agra',
+    'Manali',
+    'Shimla',
+    'Kolkata',
+    'Goa',
+    'Mumbai'
+  ]; // Example places
   String selectedPlace = "Paris";
   String startPeriod = "JAN";
   String endPeriod = "FEB";
@@ -48,7 +72,7 @@ class _VacationPageState extends State<VacationPage> {
 
   Future<void> fetchSavedVacations() async {
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:5009/get_vacations/${widget.serialId}'),
+      Uri.parse('http://127.0.0.1:5000/get_vacations/${widget.serialId}'),
     );
 
     if (response.statusCode == 200) {
@@ -62,7 +86,7 @@ class _VacationPageState extends State<VacationPage> {
 
   Future<void> getRecommendations() async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:5009/recommend_vacation'),
+      Uri.parse('http://127.0.0.1:5000/recommend_vacation'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'serial_id': widget.serialId,
@@ -85,7 +109,7 @@ class _VacationPageState extends State<VacationPage> {
 
   Future<void> addVacation(Map vacation) async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:5009/add_vacation'),
+      Uri.parse('http://127.0.0.1:5000/add_vacation'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(vacation),
     );
@@ -168,166 +192,173 @@ class _VacationPageState extends State<VacationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Vacation Recommendations"),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Form(
-                key: _formKey,
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        DropdownButtonFormField<String>(
-                          value: selectedPlace,
-                          items: places.map((String place) {
-                            return DropdownMenuItem(
-                                value: place, child: Text(place));
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedPlace = value!;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Destination",
-                            border: OutlineInputBorder(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Form(
+                  key: _formKey,
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          DropdownButtonFormField<String>(
+                            value: selectedPlace,
+                            items: places.map((String place) {
+                              return DropdownMenuItem(
+                                  value: place, child: Text(place));
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedPlace = value!;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              labelText: "Select Destination",
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => showMonthSelector(true),
-                                child: InputDecorator(
-                                  decoration: InputDecoration(
-                                    labelText: "Start Period",
-                                    border: OutlineInputBorder(),
+                          SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => showMonthSelector(true),
+                                  child: InputDecorator(
+                                    decoration: InputDecoration(
+                                      labelText: "Start Period",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    child: Text(startPeriod),
                                   ),
-                                  child: Text(startPeriod),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => showMonthSelector(false),
-                                child: InputDecorator(
-                                  decoration: InputDecoration(
-                                    labelText: "End Period",
-                                    border: OutlineInputBorder(),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => showMonthSelector(false),
+                                  child: InputDecorator(
+                                    decoration: InputDecoration(
+                                      labelText: "End Period",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    child: Text(endPeriod),
                                   ),
-                                  child: Text(endPeriod),
                                 ),
                               ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          TextFormField(
+                            controller: budgetController,
+                            decoration: InputDecoration(
+                              labelText: "Maximum Budget",
+                              border: OutlineInputBorder(),
                             ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-                        TextFormField(
-                          controller: budgetController,
-                          decoration: InputDecoration(
-                            labelText: "Maximum Budget",
-                            border: OutlineInputBorder(),
+                            keyboardType: TextInputType.number,
                           ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        SizedBox(height: 16),
-                        TextFormField(
-                          controller: daysController,
-                          decoration: InputDecoration(
-                            labelText: "Number of Days",
-                            border: OutlineInputBorder(),
+                          SizedBox(height: 16),
+                          TextFormField(
+                            controller: daysController,
+                            decoration: InputDecoration(
+                              labelText: "Number of Days",
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
                           ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        SizedBox(height: 16),
-                        TextFormField(
-                          controller: transportCostController,
-                          decoration: InputDecoration(
-                            labelText: "Transport Cost",
-                            border: OutlineInputBorder(),
+                          SizedBox(height: 16),
+                          TextFormField(
+                            controller: transportCostController,
+                            decoration: InputDecoration(
+                              labelText: "Transport Cost",
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
                           ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              getRecommendations();
-                            }
-                          },
-                          child: Text("Get Recommendations"),
-                        ),
-                      ],
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                getRecommendations();
+                              }
+                            },
+                            child: Text("Get Recommendations"),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: 16),
-              Text("Saved Plans",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              savedVacations.isEmpty
-                  ? Center(child: Text("No saved vacations available."))
-                  : ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: savedVacations.length,
-                      itemBuilder: (context, index) {
-                        final vacation = savedVacations[index];
-                        return Card(
-                          child: ListTile(
-                            title: Text(vacation['place']),
-                            subtitle: Text(
-                                "Air Cost: ${vacation['air_cost']} | Days: ${vacation['days']} | Budget Range: ${vacation['budget_range']}"),
-                          ),
-                        );
-                      },
-                    ),
-              SizedBox(height: 16),
-              Text("Recommendations",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              recommendations.isEmpty
-                  ? Center(child: Text("No recommendations available."))
-                  : ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: recommendations.length,
-                      itemBuilder: (context, index) {
-                        final rec = recommendations[index];
-                        return Card(
-                          child: ListTile(
-                            title: Text(rec['Place']),
-                            subtitle: Text(
-                                "Air Cost: ${rec['Air Cost']} | Days: ${rec['Days']} | Budget Range: ${rec['Budget Range']}"),
-                            trailing: IconButton(
-                              icon: Icon(Icons.add),
-                              onPressed: () {
-                                addVacation({
-                                  'serial_id': widget.serialId,
-                                  'place': rec['Place'],
-                                  'air_cost': rec['Air Cost'],
-                                  'days': rec['Days'],
-                                  'budget_range': rec['Budget Range'],
-                                  'time_range': rec['Time Range'],
-                                });
-                              },
+                SizedBox(height: 16),
+                Text("Saved Plans",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                savedVacations.isEmpty
+                    ? Center(child: Text("No saved vacations available."))
+                    : ListView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: savedVacations.length,
+                        itemBuilder: (context, index) {
+                          final vacation = savedVacations[index];
+                          return Card(
+                            child: ListTile(
+                              title: Text(vacation['place']),
+                              subtitle: Text(
+                                  "Air Cost: ${vacation['air_cost']} | Days: ${vacation['days']} | Budget Range: ${vacation['budget_range']}"),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-            ],
+                          );
+                        },
+                      ),
+                SizedBox(height: 16),
+                Text("Recommendations",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                recommendations.isEmpty
+                    ? Center(child: Text("No recommendations available."))
+                    : ListView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: recommendations.length,
+                        itemBuilder: (context, index) {
+                          final rec = recommendations[index];
+                          return Card(
+                            child: ListTile(
+                              title: Text(rec['Place']),
+                              subtitle: Text(
+                                  "Air Cost: ${rec['Air Cost']} | Days: ${rec['Days']} | Budget Range: ${rec['Budget Range']}"),
+                              trailing: IconButton(
+                                icon: Icon(Icons.add),
+                                onPressed: () {
+                                  addVacation({
+                                    'serial_id': widget.serialId,
+                                    'place': rec['Place'],
+                                    'air_cost': rec['Air Cost'],
+                                    'days': rec['Days'],
+                                    'budget_range': rec['Budget Range'],
+                                    'time_range': rec['Time Range'],
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ],
+            ),
           ),
         ),
       ),

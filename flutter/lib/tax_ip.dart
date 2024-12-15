@@ -87,7 +87,7 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
   Future<void> calculateTax(
       BuildContext context, Map<String, dynamic> userData) async {
     final url = Uri.parse(
-        'http://127.0.0.1:5006/calculate_tax'); // Update with your backend URL
+        'http://127.0.0.1:5000/calculate_tax'); // Update with your backend URL
     try {
       final response = await http.post(
         url,
@@ -116,113 +116,139 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        // Making the body scrollable
-        child: Container(
-          color: Colors.white, // Setting background color to white
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Heading section
-              Center(
-                child: Text(
-                  'Tax Calculator',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              // Box containing the input fields for Employment Status and Basic Salary
-              _buildInputBox(
-                leftColumn: Column(
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Tax Calculator',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
+      ),
+      body: Container(
+        height: double
+            .infinity, // Ensures the container takes up full screen height
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              // Making the body scrollable
+              child: Container(
+                color: Colors.transparent, // Setting background color to white
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Employment Status',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 40), // Spacing below the back button
+                    // Heading section
+                    // Box containing the input fields for Employment Status and Basic Salary
+                    _buildInputBox(
+                      leftColumn: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Employment Status',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          DropdownButton<String>(
+                            value: selectedEmploymentStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedEmploymentStatus = value!;
+                              });
+                            },
+                            items: ['Salaried', 'Self-Employed']
+                                .map((status) => DropdownMenuItem(
+                                    value: status, child: Text(status)))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Basic Salary',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          _buildTextField(
+                            label: 'Enter Basic Salary',
+                            onChanged: (value) {
+                              basicIncome = double.tryParse(value) ?? 0;
+                            },
+                          ),
+                        ],
+                      ),
+                      rightColumn: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'Financial Year',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          DropdownButton<String>(
+                            value: selectedFinancialYear,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedFinancialYear = value!;
+                              });
+                            },
+                            items: ['2023-24', '2022-23', '2024-25']
+                                .map((year) => DropdownMenuItem(
+                                    value: year, child: Text(year)))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Age Group',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          DropdownButton<String>(
+                            value: selectedAgeGroup,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedAgeGroup = value!;
+                              });
+                            },
+                            items: ['Below 60', '60-80', 'Above 80']
+                                .map((age) => DropdownMenuItem(
+                                    value: age, child: Text(age)))
+                                .toList(),
+                          ),
+                        ],
+                      ),
                     ),
-                    DropdownButton<String>(
-                      value: selectedEmploymentStatus,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedEmploymentStatus = value!;
-                        });
-                      },
-                      items: ['Salaried', 'Self-Employed']
-                          .map((status) => DropdownMenuItem(
-                              value: status, child: Text(status)))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Basic Salary',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    _buildTextField(
-                      label: 'Enter Basic Salary',
-                      onChanged: (value) {
-                        basicIncome = double.tryParse(value) ?? 0;
-                      },
-                    ),
-                  ],
-                ),
-                rightColumn: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text(
-                      'Financial Year',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    DropdownButton<String>(
-                      value: selectedFinancialYear,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedFinancialYear = value!;
-                        });
-                      },
-                      items: ['2023-24', '2022-23', '2024-25']
-                          .map((year) =>
-                              DropdownMenuItem(value: year, child: Text(year)))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Age Group',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    DropdownButton<String>(
-                      value: selectedAgeGroup,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedAgeGroup = value!;
-                        });
-                      },
-                      items: ['Below 60', '60-80', 'Above 80']
-                          .map((age) =>
-                              DropdownMenuItem(value: age, child: Text(age)))
-                          .toList(),
-                    ),
+                    const SizedBox(height: 20),
+                    _buildSpecialIncomeSection(),
+                    const SizedBox(height: 20),
+                    _buildCapitalGainsSection(),
+                    const SizedBox(height: 20),
+                    _buildSalariedIncomeSection(),
+                    const SizedBox(height: 20),
+                    _buildDeductionsSection(),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              _buildSpecialIncomeSection(),
-              const SizedBox(height: 20),
-              _buildCapitalGainsSection(),
-              const SizedBox(height: 20),
-              _buildSalariedIncomeSection(),
-              const SizedBox(height: 20),
-              _buildDeductionsSection(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -236,12 +262,12 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.black54, // Light black border color
+          color: Colors.blue, // Light black border color
           width: 2,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black26,
+            color: Colors.blueAccent,
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -438,7 +464,10 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
           Center(
             child: ElevatedButton(
               onPressed: onCalculateTaxPressed,
-              child: Text('Calculate Tax'),
+              child: Text(
+                'Calculate Tax',
+                selectionColor: Colors.blue,
+              ),
             ),
           ),
         ],
@@ -453,12 +482,12 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.black54,
+          color: Colors.blue,
           width: 2,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black26,
+            color: Colors.blueAccent,
             blurRadius: 8,
             offset: Offset(0, 4),
           ),

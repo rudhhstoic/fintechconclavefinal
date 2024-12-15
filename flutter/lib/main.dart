@@ -34,11 +34,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Money Matters',
+      title: 'FinBuild',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 22, 1, 58),
+          seedColor: Color.fromARGB(255, 22, 1, 58),
         ),
         useMaterial3: true,
       ),
@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+/*
 class MyHomePage extends StatefulWidget {
   final String title;
   const MyHomePage({super.key, required this.title});
@@ -139,3 +139,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+*/

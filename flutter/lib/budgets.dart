@@ -57,7 +57,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> fetchBudgets() async {
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:5004/get_budgets/${widget.serialId}'),
+      Uri.parse('http://127.0.0.1:5000/get_budgets/${widget.serialId}'),
     );
 
     if (response.statusCode == 200) {
@@ -75,7 +75,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> setBudget(String category, String limit) async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:5004/set_budget'),
+      Uri.parse('http://127.0.0.1:5000/set_budget'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'serial_id': widget.serialId,
@@ -150,37 +150,45 @@ class _BudgetPageState extends State<BudgetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Budgets")),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: budgets.length,
-              itemBuilder: (context, index) {
-                final budget = budgets[index];
-                return Card(
-                  margin: EdgeInsets.all(8),
-                  child: ListTile(
-                    leading: Icon(Icons.category, color: Colors.orange),
-                    title: Text(budget['category']),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Limit: ₹${budget['limit']}"),
-                        Text("Spent: ₹${budget['spent']}"),
-                        Text("Remaining: ₹${budget['remaining']}"),
-                      ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : ListView.builder(
+                itemCount: budgets.length,
+                itemBuilder: (context, index) {
+                  final budget = budgets[index];
+                  return Card(
+                    margin: EdgeInsets.all(8),
+                    child: ListTile(
+                      leading: Icon(Icons.category, color: Colors.orange),
+                      title: Text(budget['category']),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Limit: ₹${budget['limit']}"),
+                          Text("Spent: ₹${budget['spent']}"),
+                          Text("Remaining: ₹${budget['remaining']}"),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.edit, color: Colors.green),
+                        onPressed: () {
+                          showSetBudgetDialog(
+                              initialCategory: budget['category']);
+                        },
+                      ),
                     ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.edit, color: Colors.green),
-                      onPressed: () {
-                        showSetBudgetDialog(
-                            initialCategory: budget['category']);
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showSetBudgetDialog();

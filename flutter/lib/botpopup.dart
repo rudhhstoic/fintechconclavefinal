@@ -67,88 +67,111 @@ class ChatbotScreenState extends State<ChatbotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chatbot'),
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Finance Bot',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
           onPressed: () {
             Navigator.pop(context); // Navigate back to the previous screen
           },
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: true, // To keep the latest message at the bottom
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final messageData =
-                    _messages[_messages.length - 1 - index]; // Reverse order
-                final isBot = messageData['isBot'];
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Align(
-                    alignment: isBot
-                        ? Alignment.centerLeft
-                        : Alignment.centerRight, // Align bot messages left
-                    child: Column(
-                      crossAxisAlignment: isBot
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isBot ? Colors.grey[300] : Colors.blueAccent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            messageData['message'],
-                            style: TextStyle(
-                              color: isBot ? Colors.black : Colors.white,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                reverse: true, // To keep the latest message at the bottom
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final messageData =
+                      _messages[_messages.length - 1 - index]; // Reverse order
+                  final isBot = messageData['isBot'];
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: isBot
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight, // Align bot messages left
+                      child: Column(
+                        crossAxisAlignment: isBot
+                            ? CrossAxisAlignment.start
+                            : CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isBot
+                                  ? const Color.fromARGB(183, 255, 255, 255)
+                                  : Colors.blueAccent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              messageData['message'],
+                              style: TextStyle(
+                                color: isBot ? Colors.black : Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          messageData['time'],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color:
-                                isBot ? Colors.black54 : Colors.blueGrey[200],
+                          const SizedBox(height: 5),
+                          Text(
+                            messageData['time'],
+                            style: TextStyle(
+                              fontSize: 10,
+                              color:
+                                  isBot ? Colors.black54 : Colors.blueGrey[200],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: const InputDecoration(
+                        hintText: 'Type a message...',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(),
-                    ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    color: Colors.blueAccent,
+                    onPressed:
+                        _sendUserMessage, // Send message when button is pressed
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  color: Colors.blueAccent,
-                  onPressed:
-                      _sendUserMessage, // Send message when button is pressed
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

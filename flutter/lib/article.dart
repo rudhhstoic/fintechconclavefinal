@@ -14,9 +14,34 @@ class FinanceApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Finance Articles',
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
-        fontFamily: 'Roboto',
+        brightness: Brightness.light,
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          elevation: 5,
+        ),
+        cardColor: Colors.white,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.black), // Updated
+        ),
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.red,
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          elevation: 5,
+        ),
+        cardColor: Colors.grey[900],
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white), // Updated
+        ),
+      ),
+      themeMode: ThemeMode.system, // Switches based on system settings
       home: FinanceHomePage(),
     );
   }
@@ -31,20 +56,18 @@ class _FinanceHomePageState extends State<FinanceHomePage> {
   List articles = [];
   bool isLoading = false;
 
-  // Function to fetch articles from your Flask backend
   Future<void> fetchArticles() async {
     setState(() {
-      isLoading = true; // Start loading
+      isLoading = true;
     });
 
-    final url =
-        Uri.parse('http://127.0.0.1:5008/get_articles'); // Flask API URL
+    final url = Uri.parse('http://127.0.0.1:5000/get_articles');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         setState(() {
           articles = json.decode(response.body);
-          isLoading = false; // Stop loading
+          isLoading = false;
         });
       } else {
         setState(() {
@@ -71,88 +94,118 @@ class _FinanceHomePageState extends State<FinanceHomePage> {
   @override
   void initState() {
     super.initState();
-    fetchArticles(); // Automatically fetch articles when the page is initialized
+    fetchArticles();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
         title: const Text(
           'Finance Articles',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: Colors.blueGrey,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
       ),
-      body: Center(
-        child: isLoading
-            ? const CircularProgressIndicator() // Show loading indicator while fetching data
-            : articles.isEmpty
-                ? const Text(
-                    'No articles available.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  )
-                : ListView.builder(
-                    itemCount: articles.length,
-                    padding: const EdgeInsets.all(8.0),
-                    itemBuilder: (context, index) {
-                      return Card(
-                        elevation: 5,
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: InkWell(
-                          onTap: () => openURL(articles[index]['url']),
-                          borderRadius: BorderRadius.circular(15),
-                          child: Container(
-                            padding: const EdgeInsets.all(16.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color.fromARGB(255, 212, 212, 212),
-                                  Color.fromARGB(255, 187, 187, 187)
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: isLoading
+              ? const CircularProgressIndicator()
+              : articles.isEmpty
+                  ? Text(
+                      'No articles available.',
+                      style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
+                    )
+                  : ListView.builder(
+                      itemCount: articles.length,
+                      padding: const EdgeInsets.all(8.0),
+                      itemBuilder: (context, index) {
+                        return Card(
+                          elevation: 5,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: InkWell(
+                            onTap: () => openURL(articles[index]['url']),
+                            borderRadius: BorderRadius.circular(15),
+                            child: Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                gradient: LinearGradient(
+                                  colors: theme.brightness == Brightness.light
+                                      ? [Colors.blue[50]!, Colors.white]
+                                      : [Colors.red[800]!, Colors.black],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    articles[index]['title'] ?? 'No Title',
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.source,
+                                          size: 18,
+                                          color:
+                                              theme.textTheme.bodyLarge?.color),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        articles[index]['source'] ??
+                                            'Unknown Source',
+                                        style: theme.textTheme.bodyLarge
+                                            ?.copyWith(fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
                                 ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  articles[index]['title'] ?? 'No Title',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.source,
-                                        size: 18, color: Colors.black),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      articles[index]['source'] ??
-                                          'Unknown Source',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: fetchArticles,
+        backgroundColor: Colors.blue,
+        child: const Icon(
+          Icons.refresh,
+          color: Colors.white,
+        ),
       ),
     );
   }

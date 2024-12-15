@@ -56,15 +56,15 @@ class _AnalysisPageState extends State<AnalysisPage> {
     switch (selectedAnalysis) {
       case 'Income Category Analysis':
         url =
-            'http://127.0.0.1:5004/income_category_analysis/${widget.serialId}';
+            'http://127.0.0.1:5000/income_category_analysis/${widget.serialId}';
         break;
       case 'Expense Category Analysis':
         url =
-            'http://127.0.0.1:5004/expense_category_analysis/${widget.serialId}';
+            'http://127.0.0.1:5000/expense_category_analysis/${widget.serialId}';
         break;
       case 'Income vs Expense Analysis':
         url =
-            'http://127.0.0.1:5004/income_vs_expense_analysis/${widget.serialId}';
+            'http://127.0.0.1:5000/income_vs_expense_analysis/${widget.serialId}';
         break;
       default:
         return;
@@ -101,47 +101,56 @@ class _AnalysisPageState extends State<AnalysisPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Analysis')),
-      body: Column(
-        children: [
-          DropdownButton<String>(
-            value: selectedAnalysis,
-            items: [
-              'Income Category Analysis',
-              'Expense Category Analysis',
-              'Income vs Expense Analysis',
-            ].map((String analysis) {
-              return DropdownMenuItem<String>(
-                value: analysis,
-                child: Text(analysis),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                selectedAnalysis = value!;
-                fetchAnalysisData(); // Fetch data based on selected analysis
-              });
-            },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          Expanded(
-            child: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : chartData.isEmpty
-                    ? Center(child: Text('No data available'))
-                    : SfCircularChart(
-                        legend: Legend(isVisible: true),
-                        series: <PieSeries<ChartData, String>>[
-                          PieSeries<ChartData, String>(
-                            dataSource: chartData,
-                            xValueMapper: (ChartData data, _) => data.category,
-                            yValueMapper: (ChartData data, _) => data.amount,
-                            dataLabelSettings:
-                                DataLabelSettings(isVisible: true),
-                          ),
-                        ],
-                      ),
-          ),
-        ],
+        ),
+        child: Column(
+          children: [
+            DropdownButton<String>(
+              value: selectedAnalysis,
+              items: [
+                'Income Category Analysis',
+                'Expense Category Analysis',
+                'Income vs Expense Analysis',
+              ].map((String analysis) {
+                return DropdownMenuItem<String>(
+                  value: analysis,
+                  child: Text(analysis),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedAnalysis = value!;
+                  fetchAnalysisData(); // Fetch data based on selected analysis
+                });
+              },
+            ),
+            Expanded(
+              child: isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : chartData.isEmpty
+                      ? Center(child: Text('No data available'))
+                      : SfCircularChart(
+                          legend: Legend(isVisible: true),
+                          series: <PieSeries<ChartData, String>>[
+                            PieSeries<ChartData, String>(
+                              dataSource: chartData,
+                              xValueMapper: (ChartData data, _) =>
+                                  data.category,
+                              yValueMapper: (ChartData data, _) => data.amount,
+                              dataLabelSettings:
+                                  DataLabelSettings(isVisible: true),
+                            ),
+                          ],
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }

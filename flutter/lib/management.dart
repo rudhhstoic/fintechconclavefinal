@@ -71,7 +71,7 @@ class HomeManageState extends State<HomeManage> {
     final serialId =
         Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     final url =
-        'http://127.0.0.1:5004/get_transaction/${serialId}'; // Replace with actual Flask URL
+        'http://127.0.0.1:5000/get_transaction/${serialId}'; // Replace with actual Flask URL
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -120,8 +120,18 @@ class HomeManageState extends State<HomeManage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Money Matters'),
-        backgroundColor: Color(0xFF2d3e54),
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Budget Planning',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        iconTheme: IconThemeData(
+            color: Colors.white), // Set back button color to white
       ),
       body: _buildScreenContent(),
       floatingActionButton: _selectedIndex == 0
@@ -158,7 +168,7 @@ class HomeManageState extends State<HomeManage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 199, 28, 28),
+        selectedItemColor: const Color.fromARGB(255, 0, 12, 80),
         unselectedItemColor: const Color.fromARGB(255, 45, 46, 46),
         onTap: _onItemTapped,
       ),
@@ -168,120 +178,130 @@ class HomeManageState extends State<HomeManage> {
   Widget buildHomeScreen() {
     String monthYear = DateFormat('MMMM yyyy').format(selectedDate);
     bool isNovember = selectedDate.month == 11;
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back_ios),
-              onPressed: _goToPreviousMonth,
-            ),
-            Text(
-              monthYear,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              icon: Icon(Icons.arrow_forward_ios),
-              onPressed: _goToNextMonth,
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue, Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Expanded(
-              child: Text(
-                'Income',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back_ios),
+                onPressed: _goToPreviousMonth,
               ),
-            ),
-            Expanded(
-              child: Text(
-                'Expense',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+              Text(
+                monthYear,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-            ),
-            Expanded(
-              child: Text(
-                'Total',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+              IconButton(
+                icon: Icon(Icons.arrow_forward_ios),
+                onPressed: _goToNextMonth,
               ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Expanded(
-              child: Text(
-                '₹${totalIncome.toStringAsFixed(2)}',
-                style: TextStyle(color: Colors.green, fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                '₹${totalExpense.toStringAsFixed(2)}',
-                style: TextStyle(color: Colors.red, fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                '₹${(totalIncome - totalExpense).toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: (totalIncome - totalExpense) >= 0
-                      ? Colors.green
-                      : Colors.red,
-                  fontSize: 13,
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Text(
+                  'Income',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ],
-        ),
-        Expanded(
-          child: !isNovember // Check if the month is November
-              ? Center(
-                  child: Text(
-                    'No transactions available',
-                    style: TextStyle(fontSize: 18, color: Color(0xFF547788)),
+              Expanded(
+                child: Text(
+                  'Expense',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Total',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Text(
+                  '₹${totalIncome.toStringAsFixed(2)}',
+                  style: TextStyle(color: Colors.green, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '₹${totalExpense.toStringAsFixed(2)}',
+                  style: TextStyle(color: Colors.red, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '₹${(totalIncome - totalExpense).toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: (totalIncome - totalExpense) >= 0
+                        ? Colors.green
+                        : Colors.red,
+                    fontSize: 13,
                   ),
-                )
-              : transactions.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No transactions available',
-                        style:
-                            TextStyle(fontSize: 15, color: Color(0xFF547788)),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: transactions.length,
-                      itemBuilder: (context, index) {
-                        final transaction = transactions[index];
-                        final isIncome = transaction['transaction_type'] ==
-                            'Income'; // Determine if it's income
-                        return ListTile(
-                          title: Text(transaction['category']),
-                          subtitle: Text('${transaction['transaction_date']}'),
-                          trailing: Text(
-                            '${isIncome ? '+' : '-'} ₹${transaction['amount']}',
-                            style: TextStyle(
-                              color: isIncome
-                                  ? Colors.green
-                                  : Colors.red, // Set color
-                            ),
-                          ),
-                        );
-                      },
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: !isNovember // Check if the month is November
+                ? Center(
+                    child: Text(
+                      'No transactions available',
+                      style: TextStyle(fontSize: 18, color: Color(0xFF547788)),
                     ),
-        ),
-      ],
+                  )
+                : transactions.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No transactions available',
+                          style:
+                              TextStyle(fontSize: 15, color: Color(0xFF547788)),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: transactions.length,
+                        itemBuilder: (context, index) {
+                          final transaction = transactions[index];
+                          final isIncome = transaction['transaction_type'] ==
+                              'Income'; // Determine if it's income
+                          return ListTile(
+                            title: Text(transaction['category']),
+                            subtitle:
+                                Text('${transaction['transaction_date']}'),
+                            trailing: Text(
+                              '${isIncome ? '+' : '-'} ₹${transaction['amount']}',
+                              style: TextStyle(
+                                color: isIncome
+                                    ? Colors.green
+                                    : Colors.red, // Set color
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -306,7 +326,7 @@ class AddTransactionPageState extends State<AddTransactionPage> {
     final serialId =
         Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     final transactionType = isIncome ? 'Income' : 'Expense';
-    final url = 'http://127.0.0.1:5004/add_transaction';
+    final url = 'http://127.0.0.1:5000/add_transaction';
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
@@ -435,8 +455,16 @@ class AddTransactionPageState extends State<AddTransactionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Money Matters'),
-        backgroundColor: Color(0xFF2d3e54),
+        title: const Text(
+          'Budget Planning',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -453,57 +481,67 @@ class AddTransactionPageState extends State<AddTransactionPage> {
             ),
           ),
         ],
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildIncomeExpenseButton('Income', true),
-                SizedBox(width: 16),
-                _buildIncomeExpenseButton('Expense', false),
-              ],
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _selectCategory,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF547788),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildIncomeExpenseButton('Income', true),
+                  SizedBox(width: 16),
+                  _buildIncomeExpenseButton('Expense', false),
+                ],
               ),
-              child: Text(
-                selectedCategory,
-                style: TextStyle(color: Colors.white),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _selectCategory,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 137, 180, 201),
+                ),
+                child: Text(
+                  selectedCategory,
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Notes',
-                filled: true,
-                fillColor: Color(0xFFeadfd6),
-                border: OutlineInputBorder(),
+              SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Notes',
+                  filled: true,
+                  fillColor: Color(0xFFeadfd6),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) => setState(() {
+                  notes = value;
+                }),
               ),
-              onChanged: (value) => setState(() {
-                notes = value;
-              }),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: TextEditingController(text: displayText),
-              decoration: InputDecoration(
-                labelText: 'Amount',
-                filled: true,
-                fillColor: Color(0xFFeadfd6),
-                border: OutlineInputBorder(),
+              SizedBox(height: 16),
+              TextField(
+                controller: TextEditingController(text: displayText),
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  filled: true,
+                  fillColor: Color(0xFFeadfd6),
+                  border: OutlineInputBorder(),
+                ),
+                readOnly: true,
               ),
-              readOnly: true,
-            ),
-            SizedBox(height: 16),
-            _buildCalculator(),
-          ],
+              SizedBox(height: 16),
+              _buildCalculator(),
+            ],
+          ),
         ),
       ),
     );

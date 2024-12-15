@@ -4,13 +4,16 @@ class AuthProvider with ChangeNotifier {
   // User authentication status
   bool _isAuthenticated = false;
   int? _serialId;
+  String? _name;
 
   int? get serialId => _serialId;
+  String? get name => _name;
 
   bool get isAuthenticated => _isAuthenticated;
 
-  void setSerialId(int serialId) {
+  void setSerialId(int serialId, String name) {
     _serialId = serialId;
+    _name = name;
     notifyListeners();
   }
 
@@ -22,7 +25,7 @@ class AuthProvider with ChangeNotifier {
 
   void logout() {
     _isAuthenticated = false;
-    // Remove token
+    // Remove tokens
     notifyListeners();
   }
 }

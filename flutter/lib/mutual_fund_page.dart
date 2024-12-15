@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'mutual_fund_service.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // For using icons
 
-
-
 class MutualFund {
   final String name;
   final String categoryMain; // Main category like "EQUITY"
@@ -38,7 +36,8 @@ class MutualFund {
       categorySub: json['category']['sub'],
       amc: json['amc'],
       currentValue: json['current_value'],
-      return1Month: json['return_1_month'],  // Ensure this matches the backend JSON key
+      return1Month:
+          json['return_1_month'], // Ensure this matches the backend JSON key
       return3Months: json['return_3_month'], // Same here
       return6Months: json['return_6_month'], // And here
       returnPerAnnum: json['return_per_annum'],
@@ -47,8 +46,6 @@ class MutualFund {
     );
   }
 }
-
-
 
 class MutualFundPage extends StatefulWidget {
   @override
@@ -115,7 +112,8 @@ class _MutualFundPageState extends State<MutualFundPage> {
           selectedCategoryMain = selectedCategoryMain == value ? '' : value;
           break;
         case 'investmentPeriod':
-          selectedInvestmentPeriod = selectedInvestmentPeriod == value ? '' : value;
+          selectedInvestmentPeriod =
+              selectedInvestmentPeriod == value ? '' : value;
           break;
         case 'fundSize':
           selectedFundSize = selectedFundSize == value ? '' : value;
@@ -132,7 +130,8 @@ class _MutualFundPageState extends State<MutualFundPage> {
     });
   }
 
-  Widget buildReturnRow(String return1Month, String return3Months, String return6Months, String returnPerAnnum) {
+  Widget buildReturnRow(String return1Month, String return3Months,
+      String return6Months, String returnPerAnnum) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -149,7 +148,8 @@ class _MutualFundPageState extends State<MutualFundPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
         Row(
           children: [
             Icon(
@@ -171,18 +171,42 @@ class _MutualFundPageState extends State<MutualFundPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueGrey, // Changed the background color
-        title: Text("Mutual Funds", style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Mutual Funds',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
       ),
       body: Container(
-        color: Colors.blueGrey[50], // Changed the background color for the body
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: Card(
                 elevation: 3,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -190,7 +214,8 @@ class _MutualFundPageState extends State<MutualFundPage> {
                     children: [
                       Text(
                         'Choose it based on your need',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.left,
                       ),
                       SizedBox(height: 15),
@@ -199,7 +224,9 @@ class _MutualFundPageState extends State<MutualFundPage> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedCategoryMain.isEmpty ? null : selectedCategoryMain,
+                              value: selectedCategoryMain.isEmpty
+                                  ? null
+                                  : selectedCategoryMain,
                               items: ['EQUITY', 'DEBT', 'TAX SAVER', 'HYBRID']
                                   .map((type) => DropdownMenuItem(
                                         value: type,
@@ -221,13 +248,16 @@ class _MutualFundPageState extends State<MutualFundPage> {
                           SizedBox(width: 10),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedInvestmentPeriod.isEmpty ? null : selectedInvestmentPeriod,
-                              items: ['1 month', '3 months', '6 months', '1 year']
-                                  .map((period) => DropdownMenuItem(
-                                        value: period,
-                                        child: Text(period),
-                                      ))
-                                  .toList(),
+                              value: selectedInvestmentPeriod.isEmpty
+                                  ? null
+                                  : selectedInvestmentPeriod,
+                              items:
+                                  ['1 month', '3 months', '6 months', '1 year']
+                                      .map((period) => DropdownMenuItem(
+                                            value: period,
+                                            child: Text(period),
+                                          ))
+                                      .toList(),
                               onChanged: (value) {
                                 toggleFilter('investmentPeriod', value ?? '');
                               },
@@ -247,16 +277,14 @@ class _MutualFundPageState extends State<MutualFundPage> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedFundSize.isEmpty ? null : selectedFundSize,
+                              value: selectedFundSize.isEmpty
+                                  ? null
+                                  : selectedFundSize,
                               items: [
                                 'SMALL',
                                 'MID',
                                 'LARGE',
-                                'INTERNATIONAL',
-                                'CREDIT',
-                                'RETIREMENT',
-                                'CONSERVATIVE',
-                                'DYNAMIC'
+                                'ELSS',
                               ]
                                   .map((size) => DropdownMenuItem(
                                         value: size,
@@ -276,7 +304,9 @@ class _MutualFundPageState extends State<MutualFundPage> {
                             ),
                           ),
                           SizedBox(width: 10),
-                          Icon(Icons.pie_chart, color: Colors.white), // Bright icon for the fund size
+                          Icon(Icons.pie_chart,
+                              color: Colors
+                                  .white), // Bright icon for the fund size
                         ],
                       ),
                     ],
@@ -303,14 +333,17 @@ class _MutualFundPageState extends State<MutualFundPage> {
                             onPressed: showMoreFunds,
                             child: Text(
                               "Show ${fundsToShow < allFunds.length ? 'More' : 'All'} Funds",
-                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold),
                             ),
                           );
                         }
 
                         final fund = displayedFunds[index];
                         return Card(
-                          margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          margin:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           elevation: 2,
                           child: Padding(
                             padding: const EdgeInsets.all(10.0),
@@ -322,7 +355,8 @@ class _MutualFundPageState extends State<MutualFundPage> {
                                     SizedBox(width: 10),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             fund.name,

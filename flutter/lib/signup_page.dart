@@ -14,6 +14,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
   bool _isLoading = false;
   bool _isObscure = true;
   String _message = '';
@@ -37,13 +39,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result['success']) {
       int serialId = result['serial_id'];
-      Provider.of<AuthProvider>(context, listen: false).setSerialId(serialId);
+      String name = result['name'];
+      Provider.of<AuthProvider>(context, listen: false)
+          .setSerialId(serialId, name);
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_message)),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -107,6 +120,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           SizedBox(height: 4),
                           TextFormField(
                             controller: _usernameController,
+                            focusNode: _emailFocusNode,
+                            textInputAction: TextInputAction.next,
+                            onFieldSubmitted: (_) {
+                              FocusScope.of(context)
+                                  .requestFocus(_passwordFocusNode);
+                            },
                             decoration: InputDecoration(
                               hintText: '',
                               border: OutlineInputBorder(
@@ -144,7 +163,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           SizedBox(height: 4),
                           TextFormField(
                             controller: _passwordController,
+                            focusNode: _passwordFocusNode,
                             obscureText: _isObscure,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) {
+                              _register();
+                            },
                             decoration: InputDecoration(
                               hintText: '',
                               border: OutlineInputBorder(

@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'auth_provider.dart';
 
+//..........................................................
 void main() {
   runApp(MyApp());
 }
@@ -50,7 +51,7 @@ class UploadPageState extends State<UploadPage> {
   Future<void> fetchMutualFunds() async {
     try {
       final response = await http.get(Uri.parse(
-          'http://127.0.0.1:5005/mutualfunds')); // Replace with the correct endpoint
+          'http://127.0.0.1:5000/mutualfunds')); // Replace with the correct endpoint
       if (response.statusCode == 200) {
         List<dynamic> fundsData = json.decode(response.body);
         setState(() {
@@ -93,7 +94,7 @@ class UploadPageState extends State<UploadPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:5001/upload'), // Replace with Flask IP
+        Uri.parse('http://127.0.0.1:5000/upload'), // Replace with Flask IP
       );
 
       request.fields['text'] = selectedBank!;
@@ -146,7 +147,7 @@ class UploadPageState extends State<UploadPage> {
       final int totalCreditInt = totalCredit.toInt();
       print(totalCreditInt);
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:5010/recommend_budgets/$totalCreditInt'),
+        Uri.parse('http://127.0.0.1:5000/recommend_budgets/$totalCreditInt'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -173,7 +174,7 @@ class UploadPageState extends State<UploadPage> {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://127.0.0.1:5010/add_budget/$serialId'), // Replace '1' with the actual user ID
+            'http://127.0.0.1:5000/add_budget/$serialId'), // Replace '1' with the actual user ID
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'category': category,
@@ -205,7 +206,16 @@ class UploadPageState extends State<UploadPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Statement Analyzer'),
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Statement Analyser',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const CircleAvatar(
@@ -218,254 +228,287 @@ class UploadPageState extends State<UploadPage> {
             },
           ),
         ],
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Set the color of the back button to white
+        ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Dropdown for Bank Selection
-              DropdownButton<String>(
-                hint: Text("Select Bank"),
-                value: selectedBank,
-                items: banks.map((String bank) {
-                  return DropdownMenuItem<String>(
-                    value: bank,
-                    child: Text(bank),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedBank = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : uploadFile,
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Upload DOCX File'),
-              ),
-              const SizedBox(height: 20),
-              const Text('Balance Over Time'),
-              const SizedBox(height: 10),
-              SizedBox(
-                child: chartData.isEmpty
-                    ? const Text('No data yet.')
-                    : SfCartesianChart(
-                        primaryXAxis: DateTimeAxis(
-                          title: AxisTitle(text: 'Date'),
-                          intervalType: DateTimeIntervalType.months,
-                          dateFormat: DateFormat('dd MMM yyyy'),
-                        ),
-                        primaryYAxis: NumericAxis(
-                          title: AxisTitle(text: 'Balance'),
-                          numberFormat: NumberFormat.currency(symbol: '₹'),
-                        ),
-                        tooltipBehavior: TooltipBehavior(enable: true),
-                        series: <ChartSeries>[
-                          LineSeries<ChartData, DateTime>(
-                            dataSource: chartData,
-                            xValueMapper: (ChartData data, _) => data.date,
-                            yValueMapper: (ChartData data, _) => data.balance,
-                            markerSettings:
-                                const MarkerSettings(isVisible: true),
-                            color: const Color.fromARGB(255, 51, 50, 50),
-                            width: 2,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Gradient colors
+            begin: Alignment.topLeft, // Gradient starting point
+            end: Alignment.bottomRight, // Gradient ending point
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 10), // Adds spacing around the box
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 0), // Internal padding
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Colors.blue,
+                        width: 2), // Blue border with a width of 2
+                    borderRadius: BorderRadius.circular(8), // Rounded corners
+                  ),
+
+                  // Dropdown for Bank Selection
+                  child: DropdownButtonHideUnderline(
+                    // Opening for DropdownButtonHideUnderline
+                    child: DropdownButton<String>(
+                      hint: Text("Select Bank"),
+                      value: selectedBank,
+                      items: banks.map((String bank) {
+                        return DropdownMenuItem<String>(
+                          value: bank,
+                          child: Text(bank),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedBank = value;
+                        });
+                      },
+                      icon: const Icon(Icons.arrow_drop_down,
+                          color: Colors.black),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: _isLoading ? null : uploadFile,
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Upload DOCX File'),
+                ),
+                const SizedBox(height: 20),
+                const Text('Balance Over Time'),
+                const SizedBox(height: 10),
+                SizedBox(
+                  child: chartData.isEmpty
+                      ? const Text('No data yet.')
+                      : SfCartesianChart(
+                          primaryXAxis: DateTimeAxis(
+                            title: AxisTitle(text: 'Date'),
+                            intervalType: DateTimeIntervalType.months,
+                            dateFormat: DateFormat('dd MMM yyyy'),
                           ),
-                        ],
-                      ),
-              ),
-              const SizedBox(height: 20),
-              // Display the recommendation message
-              Text(
-                recommendMessage,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20), // First empty line
-              if (mutualFunds.isNotEmpty) ...[
-                const Text(
-                  'Recommended Schemes ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: mutualFunds.length,
-                  itemBuilder: (context, index) {
-                    final fund = mutualFunds[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
-                      color: const Color.fromARGB(
-                          255, 244, 244, 252), // Light background color
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              fund['name'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              fund['category']['main'],
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              fund['category']['sub'],
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.orange,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  children: [
-                                    const Text('1M'),
-                                    Icon(
-                                      Icons.arrow_upward,
-                                      color: Colors.green,
-                                      size: 16,
-                                    ),
-                                    Text(
-                                      '${fund['return_1_month']}%',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    const Text('3M'),
-                                    Icon(
-                                      Icons.arrow_upward,
-                                      color: Colors.green,
-                                      size: 16,
-                                    ),
-                                    Text(
-                                      '${fund['return_3_month']}%',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    const Text('6M'),
-                                    Icon(
-                                      Icons.arrow_upward,
-                                      color: Colors.green,
-                                      size: 16,
-                                    ),
-                                    Text(
-                                      '${fund['return_6_month']}%',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    const Text('1Y'),
-                                    Icon(
-                                      Icons.arrow_upward,
-                                      color: Colors.green,
-                                      size: 16,
-                                    ),
-                                    Text(
-                                      '${fund['return_per_annum']}%',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          primaryYAxis: NumericAxis(
+                            title: AxisTitle(text: 'Balance'),
+                            numberFormat: NumberFormat.currency(symbol: '₹'),
+                          ),
+                          tooltipBehavior: TooltipBehavior(enable: true),
+                          series: <ChartSeries>[
+                            LineSeries<ChartData, DateTime>(
+                              dataSource: chartData,
+                              xValueMapper: (ChartData data, _) => data.date,
+                              yValueMapper: (ChartData data, _) => data.balance,
+                              markerSettings:
+                                  const MarkerSettings(isVisible: true),
+                              color: const Color.fromARGB(255, 0, 17, 63),
+                              width: 2,
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
                 ),
-              ],
-              const SizedBox(height: 20),
-              if (recommendations.isNotEmpty) ...[
-                const Text(
-                  'Budget Recommendations ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const SizedBox(height: 20),
+                // Display the recommendation message
+                Text(
+                  recommendMessage,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: recommendations.length,
-                  itemBuilder: (context, index) {
-                    final recommendation = recommendations[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
-                      color: const Color.fromARGB(255, 244, 244, 252),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              recommendation['category'],
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            Text(
-                              '₹${recommendation['recommended_limit']}',
-                              style: const TextStyle(
-                                  fontSize: 16, color: Colors.green),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () {
-                                addBudget(recommendation['category'],
-                                    recommendation['recommended_limit']);
-                              },
-                            ),
-                          ],
+                const SizedBox(height: 20), // First empty line
+                if (mutualFunds.isNotEmpty) ...[
+                  const Text(
+                    'Recommended Schemes ',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: mutualFunds.length,
+                    itemBuilder: (context, index) {
+                      final fund = mutualFunds[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 16),
+                        color: const Color.fromARGB(
+                            249, 253, 247, 232), // Light background color
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                fund['name'],
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                fund['category']['main'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                fund['category']['sub'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    children: [
+                                      const Text('1M'),
+                                      Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.green,
+                                        size: 16,
+                                      ),
+                                      Text(
+                                        '${fund['return_1_month']}%',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text('3M'),
+                                      Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.green,
+                                        size: 16,
+                                      ),
+                                      Text(
+                                        '${fund['return_3_month']}%',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text('6M'),
+                                      Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.green,
+                                        size: 16,
+                                      ),
+                                      Text(
+                                        '${fund['return_6_month']}%',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text('1Y'),
+                                      Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.green,
+                                        size: 16,
+                                      ),
+                                      Text(
+                                        '${fund['return_per_annum']}%',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+                ],
+                const SizedBox(height: 20),
+                if (recommendations.isNotEmpty) ...[
+                  const Text(
+                    'Budget Recommendations ',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: recommendations.length,
+                    itemBuilder: (context, index) {
+                      final recommendation = recommendations[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 16),
+                        color: const Color.fromARGB(249, 253, 247, 232),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                recommendation['category'],
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              Text(
+                                '₹${recommendation['recommended_limit']}',
+                                style: const TextStyle(
+                                    fontSize: 16, color: Colors.blue),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () {
+                                  addBudget(recommendation['category'],
+                                      recommendation['recommended_limit']);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pushNamed(context, '/botpopup'); // Navigate to chatbot
         },
         tooltip: 'Chatbot',
-        child: const Icon(Icons.chat),
+        child: const Icon(Icons.chat, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

@@ -74,20 +74,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     // Welcome Texts
                     Text(
-                      "Welcome Back ",
+                      "Welcome Back",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.white70,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      "",
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 20,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -110,6 +101,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: TextField(
                         controller: _usernameController,
                         focusNode: _usernameFocusNode,
+                        onSubmitted: (value) {
+                          FocusScope.of(context)
+                              .requestFocus(_passwordFocusNode);
+                        },
                         decoration: InputDecoration(
                           labelText: _usernameFocusNode.hasFocus ||
                                   _usernameController.text.isNotEmpty
@@ -140,6 +135,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         obscureText: _isObscure,
                         focusNode: _passwordFocusNode,
+                        onSubmitted: (value) {
+                          _login(); // Trigger login when Enter is pressed
+                        },
                         decoration: InputDecoration(
                           labelText: _passwordFocusNode.hasFocus ||
                                   _passwordController.text.isNotEmpty
@@ -273,7 +271,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result['success']) {
       int serialId = result['serial_id'];
-      Provider.of<AuthProvider>(context, listen: false).setSerialId(serialId);
+      String name = result['name'];
+      Provider.of<AuthProvider>(context, listen: false)
+          .setSerialId(serialId, name);
       Navigator.pushReplacementNamed(context, '/dashboard');
     }
   }

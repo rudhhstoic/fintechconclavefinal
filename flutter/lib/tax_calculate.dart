@@ -43,7 +43,7 @@ class _TaxResultPageState extends State<TaxResultPage>
   Future<void> fetchMutualFunds() async {
     try {
       final response =
-          await http.get(Uri.parse('http://127.0.0.1:5005/mutualfunds'));
+          await http.get(Uri.parse('http://127.0.0.1:5000/mutualfunds'));
       if (response.statusCode == 200) {
         List<dynamic> fundsData = json.decode(response.body);
         setState(() {
@@ -64,11 +64,34 @@ class _TaxResultPageState extends State<TaxResultPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tax Calculation Result'),
-        backgroundColor: Colors.lightBlue,
+        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        title: const Text(
+          'Tax Calculator',
+          style: TextStyle(
+            fontFamily: 'Lobster',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
       ),
       body: Container(
-        color: Color(0xFFEDE7F6),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
@@ -102,17 +125,17 @@ class _TaxResultPageState extends State<TaxResultPage>
                         ),
                         SizedBox(height: 10),
                         Text(
-                          'Actual Tax: \$${widget.actualTax.toStringAsFixed(2)}',
+                          'Actual Tax: ₹${widget.actualTax.toStringAsFixed(2)}',
                           style:
                               TextStyle(fontSize: 16, color: Color(0xFF333333)),
                         ),
                         Text(
-                          'Total Deductions: \$${widget.totalDeductions.toStringAsFixed(2)}',
+                          'Total Deductions: ₹${widget.totalDeductions.toStringAsFixed(2)}',
                           style:
                               TextStyle(fontSize: 16, color: Color(0xFF333333)),
                         ),
                         Text(
-                          'Tax After Deductions: \$${widget.taxAfterDeductions.toStringAsFixed(2)}',
+                          'Tax After Deductions: ₹${widget.taxAfterDeductions.toStringAsFixed(2)}',
                           style:
                               TextStyle(fontSize: 16, color: Color(0xFF333333)),
                         ),

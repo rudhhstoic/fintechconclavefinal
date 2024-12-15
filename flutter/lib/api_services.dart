@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = 'http://127.0.0.1:5003'; // Make sure this is correct
+  final String baseUrl = 'http://127.0.0.1:5000'; // Use your Flask HTTPS URL
 
   // Register method
   Future<Map<String, dynamic>> register(
@@ -20,6 +20,7 @@ class ApiService {
       return {
         'success': true,
         'message': 'Registration successful',
+        'name': data['name'],
         'serial_id': data['serial_id']
       };
     } else {
@@ -47,6 +48,7 @@ class ApiService {
         'success': true,
         'token': responseData['token'],
         'message': 'Login successful',
+        'name': responseData['name'],
         'serial_id': responseData['serial_id']
       };
     } else {

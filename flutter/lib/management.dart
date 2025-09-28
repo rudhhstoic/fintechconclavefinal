@@ -38,6 +38,7 @@ class HomeManageState extends State<HomeManage> {
   int _selectedIndex = 0;
   DateTime selectedDate = DateTime.now();
   List transactions = []; // Stores the transactions fetched
+  List filteredTransactions = []; // Stores filtered transactions for the selected month
   double totalIncome = 0.0; // To store total income
   double totalExpense = 0.0; // To store total expense
 
@@ -78,25 +79,24 @@ class HomeManageState extends State<HomeManage> {
       setState(() {
         transactions =
             json.decode(response.body); // Parse and store transactions
+        filteredTransactions = transactions.where((t) {
+          DateTime date = DateFormat('EEE, dd MMM yyyy').parse(t['transaction_date']);
+          return date.month == selectedDate.month && date.year == selectedDate.year;
+        }).toList();
         calculateTotals();
       });
     }
   }
 
   void calculateTotals() {
-    if (selectedDate.month != 11) {
-      totalIncome = 0.0;
-      totalExpense = 0.0;
-    } else {
-      totalIncome = 0.0;
-      totalExpense = 0.0;
-      for (var transaction in transactions) {
-        final amount = double.parse(transaction['amount']);
-        if (transaction['transaction_type'] == 'Income') {
-          totalIncome += amount;
-        } else if (transaction['transaction_type'] == 'Expense') {
-          totalExpense += amount;
-        }
+    totalIncome = 0.0;
+    totalExpense = 0.0;
+    for (var transaction in filteredTransactions) {
+      final amount = double.parse(transaction['amount']);
+      if (transaction['transaction_type'] == 'Income') {
+        totalIncome += amount;
+      } else if (transaction['transaction_type'] == 'Expense') {
+        totalExpense += amount;
       }
     }
   }
@@ -177,7 +177,6 @@ class HomeManageState extends State<HomeManage> {
 
   Widget buildHomeScreen() {
     String monthYear = DateFormat('MMMM yyyy').format(selectedDate);
-    bool isNovember = selectedDate.month == 11;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -263,42 +262,31 @@ class HomeManageState extends State<HomeManage> {
             ],
           ),
           Expanded(
-            child: !isNovember // Check if the month is November
+            child: filteredTransactions.isEmpty
                 ? Center(
                     child: Text(
                       'No transactions available',
                       style: TextStyle(fontSize: 18, color: Color(0xFF547788)),
                     ),
                   )
-                : transactions.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No transactions available',
-                          style:
-                              TextStyle(fontSize: 15, color: Color(0xFF547788)),
+                : ListView.builder(
+                    itemCount: filteredTransactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = filteredTransactions[index];
+                      final isIncome = transaction['transaction_type'] ==
+                          'Income'; // Determine if it's income
+                      return ListTile(
+                        title: Text(transaction['category']),
+                        subtitle: Text('${transaction['transaction_date']}'),
+                        trailing: Text(
+                          '${isIncome ? '+' : '-'} ₹${transaction['amount']}',
+                          style: TextStyle(
+                            color: isIncome ? Colors.green : Colors.red, // Set color
+                          ),
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: transactions.length,
-                        itemBuilder: (context, index) {
-                          final transaction = transactions[index];
-                          final isIncome = transaction['transaction_type'] ==
-                              'Income'; // Determine if it's income
-                          return ListTile(
-                            title: Text(transaction['category']),
-                            subtitle:
-                                Text('${transaction['transaction_date']}'),
-                            trailing: Text(
-                              '${isIncome ? '+' : '-'} ₹${transaction['amount']}',
-                              style: TextStyle(
-                                color: isIncome
-                                    ? Colors.green
-                                    : Colors.red, // Set color
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

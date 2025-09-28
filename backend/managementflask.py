@@ -7,11 +7,12 @@ from datetime import datetime
 import os
 import binascii
 from flask_cors import CORS
+import bcrypt
 
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = binascii.hexlify(os.urandom(24)).decode()  # Securely generate a secret key
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Archana@localhost:5432/Archons'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:anirudhh@localhost:5432/Archons'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -20,7 +21,7 @@ class Customer(db.Model):
     __tablename__ = 'customer'
     serial_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
-    password = db.Column(db.String(10), nullable=False)  # Note: Use hashing for passwords in production!
+    password = db.Column(db.String(128), nullable=False)
 
 class Record(db.Model):
     __tablename__ = 'records'
@@ -37,7 +38,7 @@ class Budget(db.Model):
     budget_id = db.Column(db.Integer, primary_key=True)
     serial_id = db.Column(db.Integer, db.ForeignKey('customer.serial_id', ondelete='CASCADE'), nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    limit = db.Column(db.Numeric(15, 2), nullable=False)
+    budget_limit = db.Column(db.Numeric(15, 2), nullable=False)
     spent = db.Column(db.Numeric(15, 2), default=0)
     remaining = db.Column(db.Numeric(15,2))
 
@@ -53,18 +54,22 @@ with app.app_context():
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    new_user = Customer(username=data['username'], password=data['password'])
+    username = data['username']
+    password = data['password']
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    new_user = Customer(username=username, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"message": "User registered successfully"}), 201
+    return jsonify({"message": "User registered successfully", "serial_id": new_user.serial_id}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    user = Customer.query.filter_by(username=data['username'], password=data['password']).first()
-    if user:
-        #session['serial_id'] = user.serial_id  # Store serial_id in session
-        return jsonify({"message": "Login successful"}), 200
+    username = data['username']
+    password = data['password']
+    user = Customer.query.filter_by(username=username).first()
+    if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+        return jsonify({"message": "Login successful", "serial_id": user.serial_id}), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
@@ -226,7 +231,7 @@ def set_budget():
     budget = Budget.query.filter_by(serial_id=serial_id, category=category).first()
     if budget:
         # Update existing budget
-        budget.limit = limit
+        budget.budget_limit = limit
         budget.spent = total_spent
         budget.remaining = remaining
     else:
@@ -234,7 +239,7 @@ def set_budget():
         budget = Budget(
             serial_id=serial_id,
             category=category,
-            limit=limit,
+            budget_limit=limit,
             spent=total_spent,
             remaining=remaining
         )
@@ -246,7 +251,7 @@ def set_budget():
         "message": "Budget set successfully",
         "budget": {
             "category": budget.category,
-            "limit": str(budget.limit),
+            "budget_limit": str(budget.budget_limit),
             "spent": str(budget.spent),
             "remaining": str(budget.remaining)
         }
@@ -254,7 +259,7 @@ def set_budget():
 
 @app.route('/get_budgets/<int:serial_id>', methods=['GET'])
 def get_budgets(serial_id):
-    user = Customer.query.get(serial_id)
+    user = db.session.get(Customer, serial_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
     
@@ -264,9 +269,9 @@ def get_budgets(serial_id):
         output.append({
             "budget_id": budget.budget_id,
             "category": budget.category,
-            "limit": f"{budget.limit:.2f}",
+            "budget_limit": f"{budget.budget_limit:.2f}",
             "spent": f"{budget.spent:.2f}",
-            "remaining": f"{(budget.limit - budget.spent):.2f}"
+            "remaining": f"{(budget.budget_limit - budget.spent):.2f}"
         })
     return jsonify(output)
 

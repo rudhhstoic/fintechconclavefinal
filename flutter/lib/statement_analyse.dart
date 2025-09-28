@@ -304,7 +304,7 @@ class UploadPageState extends State<UploadPage> {
                             numberFormat: NumberFormat.currency(symbol: '₹'),
                           ),
                           tooltipBehavior: TooltipBehavior(enable: true),
-                          series: <ChartSeries>[
+                          series: <CartesianSeries>[
                             LineSeries<ChartData, DateTime>(
                               dataSource: chartData,
                               xValueMapper: (ChartData data, _) => data.date,

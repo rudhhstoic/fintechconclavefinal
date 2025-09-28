@@ -32,7 +32,7 @@ load_dotenv()
 
 # App Configuration
 app.config['SECRET_KEY'] = binascii.hexlify(os.urandom(24)).decode()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Archana@localhost:5432/Archons'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:anirudhh@localhost:5432/Archons'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 chatbot = FinanceChatbotModel(GEMINI_API_KEY)
 
 # Load budget recommendation model
-model = joblib.load(r'E:\FinTech\backend\models\budget_recommendation_model.pkl')
+model = joblib.load(r'C:\Users\Lenovo\Desktop\fintech\FinTech\backend\models\budget_recommendation_model.pkl')
 
 # Define Database Models
 class Customer(db.Model):
@@ -81,7 +81,7 @@ class Budget(db.Model):
     budget_id = db.Column(db.Integer, primary_key=True)
     serial_id = db.Column(db.Integer, db.ForeignKey('customer.serial_id', ondelete='CASCADE'), nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    limit = db.Column(db.Numeric(15, 2), nullable=False)
+    budget_limit = db.Column(db.Numeric(15, 2), nullable=False)
     spent = db.Column(db.Numeric(15, 2), default=0)
     remaining = db.Column(db.Numeric(15, 2))
     # Foreign key relationship with the Customer model
@@ -108,17 +108,17 @@ class Reminder(db.Model):
 class MutualFund(db.Model):
     __tablename__ = 'mutual_funds'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column("Name", db.String(100))
+    name = db.Column("name", db.String(100))
     category_main = db.Column("category_main", db.String(50))
     category_sub = db.Column("category_sub", db.String(50))
-    amc = db.Column("AMC", db.String(100))
-    current_value = db.Column("Current_value", db.String(20))
-    return_per_annum = db.Column("Return per annum", db.String(20))
-    expense_ratio = db.Column("Expense_ratio", db.String(10))
+    amc = db.Column("amc", db.String(100))
+    current_value = db.Column("current_value", db.String(20))
+    return_per_annum = db.Column("return_per_annum", db.String(20))
+    expense_ratio = db.Column("expense_ratio", db.String(10))
     return_1_month = db.Column("return1month", db.String(10))
     return_3_month = db.Column("return3month", db.String(10))
     return_6_month = db.Column("return6month", db.String(10))
-    age = db.Column("Age", db.String(20))
+    age = db.Column("age", db.String(20))
 
     def to_dict(self):
         return {
@@ -140,19 +140,19 @@ class MutualFund(db.Model):
 def calculate_tax(data):
     # Extract inputs
     financial_year = data.get('financial_year')
-    basic_income = data.get('basic_income')
-    special_income = data.get('special_income')
-    hra_received = data.get('hra_received')
+    basic_income = float(data.get('basic_income', 0))
+    special_income = float(data.get('special_income', 0))
+    hra_received = float(data.get('hra_received', 0))
     deductions = data.get('deductions', {})
     capital_gains = data.get('capital_gains', {})
 
     # Calculate gross salary and other inputs
     gross_salary = basic_income + special_income + hra_received
     total_deductions = (
-        deductions.get('deduction80C') + 
-        deductions.get('deduction80D') + 
-        deductions.get('deduction80E') + 
-        deductions.get('deduction80G')
+        deductions.get('deduction80C', 0) +
+        deductions.get('deduction80D', 0) +
+        deductions.get('deduction80E', 0) +
+        deductions.get('deduction80G', 0)
     )
     # Capital gains (if needed for specific tax treatment)
     total_capital_gains = sum(capital_gains.values())
@@ -191,10 +191,8 @@ def calculate_tax(data):
 
     # Calculate rebate under Section 87A if applicable
     rebate = 0
-    if financial_year == '2024-25' and taxable_income <= 715000:
-        excess_income = taxable_income - 700000
-        tax_without_rebate = income_tax
-        rebate = max(0, tax_without_rebate - excess_income)
+    if financial_year == '2024-25' and taxable_income <= 700000:
+        rebate = min(12500, income_tax)
 
     # Final tax after rebate
     tax_after_rebate = income_tax - rebate
@@ -223,8 +221,8 @@ def get_db_connection():
             host="localhost",
             port="5432",
             database="Archons",
-            user="first_username",
-            password="Archana"
+            user="postgres",
+            password="anirudhh"
         )
         return conn
     except Exception as e:
@@ -350,8 +348,8 @@ def add_transaction():
     expense_total = db.session.query(func.sum(Record.amount)).filter_by(serial_id=serial_id, transaction_type='Expense').scalar() or Decimal('0')
     current_balance = income_total - expense_total
 
-    # Get current date in "Fri, 01 Nov 2024" format
-    transaction_date = datetime.now().strftime('%a, %d %b %Y')
+    # Get current date
+    transaction_date = datetime.now().date()
 
     # Adjust balance based on the new transaction
     if transaction_type == 'Income':
@@ -491,7 +489,7 @@ def set_budget():
     budget = Budget.query.filter_by(serial_id=serial_id, category=category).first()
     if budget:
         # Update existing budget
-        budget.limit = limit
+        budget.budget_limit = limit
         budget.spent = total_spent
         budget.remaining = remaining
     else:
@@ -499,7 +497,7 @@ def set_budget():
         budget = Budget(
             serial_id=serial_id,
             category=category,
-            limit=limit,
+            budget_limit=limit,
             spent=total_spent,
             remaining=remaining
         )
@@ -511,7 +509,7 @@ def set_budget():
         "message": "Budget set successfully",
         "budget": {
             "category": budget.category,
-            "limit": str(budget.limit),
+            "budget_limit": str(budget.budget_limit),
             "spent": str(budget.spent),
             "remaining": str(budget.remaining)
         }
@@ -551,7 +549,7 @@ def recommend_budgets(total_credit):
 
 @app.route('/get_budgets/<int:serial_id>', methods=['GET'])
 def get_budgets(serial_id):
-    user = Customer.query.get(serial_id)
+    user = db.session.get(Customer, serial_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
     
@@ -561,9 +559,9 @@ def get_budgets(serial_id):
         output.append({
             "budget_id": budget.budget_id,
             "category": budget.category,
-            "limit": f"{budget.limit:.2f}",
+            "budget_limit": f"{budget.budget_limit:.2f}",
             "spent": f"{budget.spent:.2f}",
-            "remaining": f"{(budget.limit - budget.spent):.2f}"
+            "remaining": f"{(budget.budget_limit - budget.spent):.2f}"
         })
     return jsonify(output)
 
@@ -660,9 +658,9 @@ def recommend_vacation():
     days = data['days']
     airline_cost = data['airline_ticket_cost']
 
-    # Encode place and time using the respective LabelEncoders
-    place_encoded = le_place.transform([place])[0]
-    time_encoded = le_time.transform([time_of_year])[0]
+    # Encode place and time using the respective OrdinalEncoders
+    place_encoded = le_place.transform([[place]])[0][0]
+    time_encoded = le_time.transform([[time_of_year]])[0][0]
 
     # Predict the recommended budget
     input_features = np.array([[place_encoded, time_encoded, days, 0,airline_cost ,0]])  # 0 for Avg Daily Cost and Popularity
@@ -957,7 +955,7 @@ def add_budget(serial_id):
     budget = Budget.query.filter_by(serial_id=serial_id, category=category).first()
     if budget:
         # Update existing budget
-        budget.limit = limit
+        budget.budget_limit = limit
         budget.spent = total_spent
         budget.remaining = remaining
     else:
@@ -965,7 +963,7 @@ def add_budget(serial_id):
         budget = Budget(
             serial_id=serial_id,
             category=category,
-            limit=limit,
+            budget_limit=limit,
             spent=total_spent,
             remaining=remaining
         )

@@ -4,23 +4,23 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://first_username:Archana@localhost:5432/Archons'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:anirudhh@localhost:5432/Archons'
 db = SQLAlchemy(app)
 
 class MutualFund(db.Model):
     __tablename__ = 'mutual_funds'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column("Name", db.String(100))
+    name = db.Column("name", db.String(100))
     category_main = db.Column("category_main", db.String(50))
     category_sub = db.Column("category_sub", db.String(50))
-    amc = db.Column("AMC", db.String(100))
-    current_value = db.Column("Current_value", db.String(20))
-    return_per_annum = db.Column("Return per annum", db.String(20))
-    expense_ratio = db.Column("Expense_ratio", db.String(10))
+    amc = db.Column("amc", db.String(100))
+    current_value = db.Column("current_value", db.String(20))
+    return_per_annum = db.Column("return_per_annum", db.String(20))
+    expense_ratio = db.Column("expense_ratio", db.String(10))
     return_1_month = db.Column("return1month", db.String(10))
     return_3_month = db.Column("return3month", db.String(10))
     return_6_month = db.Column("return6month", db.String(10))
-    age = db.Column("Age", db.String(20))
+    age = db.Column("age", db.String(20))
 
     def to_dict(self):
         return {

@@ -168,7 +168,7 @@ class _TaxResultPageState extends State<TaxResultPage>
                       SizedBox(height: 10),
                       SfCartesianChart(
                         primaryXAxis: CategoryAxis(),
-                        series: <ChartSeries>[
+                        series: <CartesianSeries>[
                           ColumnSeries<_TaxData, String>(
                             dataSource: [
                               _TaxData('Actual Tax', widget.actualTax),

@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify
-from stock import Stock  # Make sure to replace with the actual module name
-from datetime import datetime
+from stock import StockPredictor  # Make sure to replace with the actual module name
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
 # Initialize the stock analysis class
-stock_analyzer = Stock()
+stock_analyzer = StockPredictor()
 
-@app.route('/analyze_stock', methods=['POST'])
-def analyze_stock():
+@app.route('/analyse_stock', methods=['POST'])
+def analyse_stock():
     try:
         # Get data from the request
         data = request.json
@@ -22,15 +21,9 @@ def analyze_stock():
         if not all([stock_name, start_date, end_date]):
             return jsonify({'error': 'Missing required parameters'}), 400
 
-        # Convert dates from mm/dd/yyyy to yyyy-mm-dd
-        try:
-            start_date = datetime.strptime(start_date, '%m/%d/%Y').strftime('%Y-%m-%d')
-            end_date = datetime.strptime(end_date, '%m/%d/%Y').strftime('%Y-%m-%d')
-        except ValueError:
-            return jsonify({'error': 'Invalid date format. Use mm/dd/yyyy.'}), 400
+        # Dates are already in yyyy-MM-dd format from Flutter
 
-
-        # Call the analyze function
+        # Call the analyse function
         result = stock_analyzer.analyse(stock_name, start_date, end_date)
         # Return the result as JSON
         return jsonify(result), 200

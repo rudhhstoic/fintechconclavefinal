@@ -13,10 +13,11 @@ import os
 app = Flask(__name__)
 CORS(app)
 # Load the trained model
-model = joblib.load(r'E:\FinTech\backend\models\budget_recommendation_model.pkl')
+model = joblib.load(r'C:\Users\Lenovo\Desktop\fintech\FinTech\backend\models\budget_recommendation_model.pkl')
+
 
 app.config['SECRET_KEY'] = binascii.hexlify(os.urandom(24)).decode()  # Securely generate a secret key
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Archana@localhost:5432/Archons'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:anirudhh@localhost:5432/Archons'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -42,7 +43,7 @@ class Budget(db.Model):
     budget_id = db.Column(db.Integer, primary_key=True)
     serial_id = db.Column(db.Integer, db.ForeignKey('customer.serial_id', ondelete='CASCADE'), nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    limit = db.Column(db.Numeric(15, 2), nullable=False)
+    budget_limit = db.Column(db.Numeric(15, 2), nullable=False)
     spent = db.Column(db.Numeric(15, 2), default=0)
     remaining = db.Column(db.Numeric(15,2))
 
@@ -106,7 +107,7 @@ def add_budget(serial_id):
     if not category or recommended_limit is None:
         return jsonify({"message": "Invalid input: category and recommended_limit are required"}), 400
 
-    limit = Decimal(recommended_limit)
+    budget_limit = Decimal(recommended_limit)
 
     # Calculate total spent amount for this category
     total_spent = db.session.query(func.sum(Record.amount)).filter(
@@ -114,13 +115,13 @@ def add_budget(serial_id):
     ).scalar() or Decimal('0')
 
     # Calculate remaining amount
-    remaining = limit - total_spent
+    remaining = budget_limit - total_spent
 
     # Create or update the budget entry
     budget = Budget.query.filter_by(serial_id=serial_id, category=category).first()
     if budget:
         # Update existing budget
-        budget.limit = limit
+        budget.budget_limit = budget_limit
         budget.spent = total_spent
         budget.remaining = remaining
     else:
@@ -128,7 +129,7 @@ def add_budget(serial_id):
         budget = Budget(
             serial_id=serial_id,
             category=category,
-            limit=limit,
+            limit=budget_limit,
             spent=total_spent,
             remaining=remaining
         )

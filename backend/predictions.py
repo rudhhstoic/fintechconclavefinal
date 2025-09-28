@@ -14,7 +14,7 @@ CORS(app)
 
 # Configuration
 app.config['SECRET_KEY'] = binascii.hexlify(os.urandom(24)).decode()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Archana@localhost:5432/Archons'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:anirudhh@localhost:5432/Archons'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 

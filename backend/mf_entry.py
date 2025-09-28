@@ -2,14 +2,14 @@ import pandas as pd
 import psycopg2
 
 # Load CSV data into a DataFrame
-csv_file_path = r'E:\FinTech\updateddata.csv'
+csv_file_path = r'C:\Users\Lenovo\Desktop\fintech\FinTech\backend\updateddata.csv'
 df = pd.read_csv(csv_file_path)
 
 # Database connection details
 db_config = {
     'dbname': 'Archons',
-    'user': 'first_username',
-    'password': 'Archana',
+    'user': 'postgres',
+    'password': 'anirudhh',
     'host': 'localhost',  # or your database server IP
     'port': '5432'        # default PostgreSQL port
 }
@@ -23,12 +23,14 @@ try:
     # Insert each row of the DataFrame into the table
     for _, row in df.iterrows():
         insert_query = """
-        INSERT INTO mutual_funds (
-            "Name", "Category", "AMC", "Current_value", "Return per annum",
-            "Expense_ratio", "Age", id, category_main, category_sub,
-            return1month, return3month, return6month, crisil
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
+INSERT INTO mutual_funds (
+    name, category, amc, current_value, return_per_annum,
+    expense_ratio, age, id, category_main, category_sub,
+    return1month, return3month, return6month, crisil
+) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+"""
+
+        
 
         # Convert row data to a tuple and insert
         cursor.execute(insert_query, tuple(row))

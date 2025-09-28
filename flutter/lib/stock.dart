@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:syncfusion_flutter_charts/charts.dart'; // Import Syncfusion charts
+import 'package:syncfusion_flutter_charts/charts.dart';
+import 'stock_predict.dart'; // Ensure you import the analysis page
 
 class StockPredictionPage extends StatefulWidget {
   @override
@@ -11,7 +12,7 @@ class StockPredictionPage extends StatefulWidget {
 
 class _StockPredictionPageState extends State<StockPredictionPage>
     with TickerProviderStateMixin {
-  String selectedPeriod = '1 wk';
+  String selectedPeriod = '3mo'; // Default to a more useful period
   String? selectedCompany;
   String? stockSymbol;
   String stockName = 'Stock Name';
@@ -23,6 +24,8 @@ class _StockPredictionPageState extends State<StockPredictionPage>
   double? niftyreturn;
   late AnimationController _controller;
   late Animation<double> _buttonScaleAnimation;
+  bool _isLoading = false;
+  String _errorMessage = '';
 
   final Map<String, String> companyTickerMap = {
     "Reliance Industries": "RELIANCE.NS",
@@ -35,303 +38,307 @@ class _StockPredictionPageState extends State<StockPredictionPage>
     "Hindustan Unilever": "HINDUNILVR.NS",
     "Kotak Mahindra Bank": "KOTAKBANK.NS",
     "Adani Enterprises": "ADANIENT.NS",
-    "Adani Green Energy": "ADANIGREEN.NS",
-    "Adani Ports": "ADANIPORTS.NS",
-    "ITC": "ITC.NS",
-    "Tata Steel": "TATASTEEL.NS",
-    "Wipro": "WIPRO.NS",
-    "Maruti Suzuki": "MARUTI.NS",
-    "Axis Bank": "AXISBANK.NS",
-    "HCL Technologies": "HCLTECH.NS",
-    "Larsen & Toubro": "LT.NS",
-    "Asian Paints": "ASIANPAINT.NS",
-    "UltraTech Cement": "ULTRACEMCO.NS",
-    "Titan Company": "TITAN.NS",
-    "Sun Pharmaceutical": "SUNPHARMA.NS",
-    "Dr. Reddy's Laboratories": "DRREDDY.NS",
-    "Mahindra & Mahindra": "M&M.NS",
-    "Power Grid Corporation": "POWERGRID.NS",
-    "Bajaj Finance": "BAJFINANCE.NS",
-    "Hindalco Industries": "HINDALCO.NS",
-    "Tata Motors": "TATAMOTORS.NS",
-    "Coal India": "COALINDIA.NS",
-    "NTPC": "NTPC.NS",
-    "Grasim Industries": "GRASIM.NS",
-    "Nestle India": "NESTLEIND.NS",
-    "SBI Life Insurance": "SBILIFE.NS",
-    "Bajaj Finserv": "BAJAJFINSV.NS",
-    "Divi's Laboratories": "DIVISLAB.NS",
-    "Britannia Industries": "BRITANNIA.NS",
-    "HDFC Life Insurance": "HDFCLIFE.NS",
-    "IndusInd Bank": "INDUSINDBK.NS",
-    "Eicher Motors": "EICHERMOT.NS"
   };
 
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     _buttonScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
     );
   }
 
-  // Function to send data to the backend and get prediction result
-  Future<void> getPrediction() async {
-    final url = Uri.parse('http://127.0.0.1:5000/calculate_return');
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
+  Future<void> calculateReturn() async {
+    if (stockSymbol == null || investmentAmount <= 0) {
+      setState(() {
+        _errorMessage = 'Please select a company and enter a valid investment amount.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      predictedAmount = null;
+      percentReturn = null;
+      niftyreturn = null;
+    });
+
+    final url = Uri.parse('http://127.0.0.1:5000/calculate_return');
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "stockName": stockSymbol,
-          "investmentAmount": investmentAmount,
-          "period": selectedPeriod,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'stockName': stockSymbol,
+          'investmentAmount': investmentAmount,
+          'period': selectedPeriod,
         }),
       );
 
+      final data = json.decode(response.body);
+
       if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
         setState(() {
-          predictedAmount = result['stock_value'];
-          absoluteReturn = result['absolute_return'];
-          percentReturn = result['absolute_return'];
-          niftyreturn = result['nifty_value'];
+          predictedAmount = data['stock_value'];
+          percentReturn = data['absolute_return'];
+          niftyreturn = data['nifty_value'];
+          _errorMessage = '';
         });
       } else {
-        throw Exception("Failed to fetch prediction");
+        setState(() {
+          _errorMessage = data['error'] ?? 'An unknown error occurred.';
+        });
       }
     } catch (e) {
-      print("Error: $e");
+      setState(() {
+        _errorMessage = 'Failed to connect to the server: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
+
+  void _onPeriodSelected(String period) {
+    setState(() {
+      selectedPeriod = period;
+    });
+  }
+
+  void _onCompanySelected(String? company) {
+    setState(() {
+      selectedCompany = company;
+      stockSymbol = company != null ? companyTickerMap[company] : null;
+      stockName = company ?? 'Stock Name';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 0, 12, 80),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context, true);
-          },
-        ),
-        title: const Text(
-          'Finance Bot',
-          style: TextStyle(
-            fontFamily: 'Lobster',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.help_outline, color: Colors.red),
-            onPressed: () {},
-            tooltip:
-                "Stock predictions are not guaranteed. Consult a financial advisor before investing.",
-          ),
-        ],
+        title: const Text('Stock Investment Comparison'),
+        backgroundColor: Colors.blueAccent,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue, Colors.white], // Blue to white gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              Text(
-                'In $selectedPeriod you would have earned',
-                style: TextStyle(fontSize: 18, color: Colors.black54),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // Input Fields and Company Selection
+              StockCompanyDropdown(
+                selectedCompany: selectedCompany,
+                onChanged: _onCompanySelected,
+                companies: companyTickerMap.keys.toList(),
               ),
-              Text(
-                predictedAmount != null
-                    ? '₹${predictedAmount!.toStringAsFixed(2)}'
-                    : '₹0.00',
-                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                percentReturn != null
-                    ? '${percentReturn!.toStringAsFixed(2)}% ABSOLUTE RETURN'
-                    : '0% ABSOLUTE RETURN',
-                style: TextStyle(
-                  color: percentReturn != null && percentReturn! < 0
-                      ? Colors.red
-                      : Colors.green,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  InvestmentInfoCard(
-                    amount: predictedAmount != null
-                        ? '₹${predictedAmount!.toStringAsFixed(2)}'
-                        : '₹0.00',
-                    label: stockName,
-                  ),
-                  InvestmentInfoCard(
-                    amount: niftyreturn != null
-                        ? '₹${niftyreturn!.toStringAsFixed(2)}'
-                        : '₹0.00',
-                    label: 'Nifty 50',
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
-              PeriodSelector(
-                selectedPeriod: selectedPeriod,
-                onPeriodSelected: (period) {
-                  setState(() {
-                    selectedPeriod = period;
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Select company',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                items: companyTickerMap.keys.map((company) {
-                  return DropdownMenuItem<String>(
-                    value: company,
-                    child: Text(company),
-                  );
-                }).toList(),
-                value: selectedCompany,
-                onChanged: (value) {
-                  setState(() {
-                    selectedCompany = value;
-                    stockSymbol = companyTickerMap[value];
-                    stockName =
-                        value ?? 'Stock Name'; // Update displayed stock name
-                  });
-                },
-              ),
-
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               StockInputField(
-                label: 'Your investment amount',
-                hint: '₹$investmentAmount', // Updated hint text
-                icon: Icons.currency_rupee, // Updated icon to rupee symbol
+                label: 'Investment Amount',
+                hint: 'Enter your investment amount (e.g., 1000)',
+                icon: Icons.monetization_on,
                 onChanged: (value) {
-                  setState(() {
-                    investmentAmount = double.tryParse(value) ?? 0.0;
-                  });
+                  investmentAmount = double.tryParse(value) ?? 0;
                 },
                 isNumeric: true,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 10),
+              PeriodSelector(
+                selectedPeriod: selectedPeriod,
+                onPeriodSelected: _onPeriodSelected,
+              ),
+              const SizedBox(height: 20),
+
+              // Calculate Button
               ScaleTransition(
                 scale: _buttonScaleAnimation,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : calculateReturn,
+                  icon: const Icon(Icons.calculate),
+                  label: _isLoading
+                      ? const Text('Calculating...')
+                      : const Text('Calculate Return'),
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    shadowColor: Colors.black.withOpacity(0.2),
-                    elevation: 6,
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    textStyle: const TextStyle(fontSize: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  onPressed: () {
-                    _controller.forward().then((_) => _controller.reverse());
-                    getPrediction();
-                  },
-                  child: Text('Get Graph', style: TextStyle(fontSize: 16)),
                 ),
               ),
-              SizedBox(height: 20),
-              // 3D Bar Chart using Syncfusion with conditional colors
-              if (predictedAmount != null && niftyreturn != null)
+              const SizedBox(height: 20),
+
+              // Error Message Display
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              // Results and Chart
+              if (percentReturn != null && predictedAmount != null) ...[
+                // Absolute Return Text
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Performance Summary',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          percentReturn != null
+                              ? '${percentReturn!.toStringAsFixed(2)}% ABSOLUTE RETURN'
+                              : '0% ABSOLUTE RETURN',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: percentReturn! < 0
+                                ? Colors.red.shade800
+                                : Colors.green.shade800,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          'Final Value: ₹${predictedAmount!.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 15),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Navigate to the analysis page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StockAnalysisPage(
+                                  stockSymbol: stockSymbol!,
+                                  stockName: stockName,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.analytics),
+                          label: const Text('View Price Prediction & Analysis'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.indigo,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Comparison Chart
                 Container(
-                  height: 300,
-                  child: SfCartesianChart(
-                    primaryXAxis: CategoryAxis(
-                      isVisible: true,
-                      axisLine: AxisLine(
-                        color: Colors.black, // Dark color for the X-axis line
-                        width: 1, // Increase the width for a bolder line
-                      ),
-                      labelStyle: TextStyle(
-                        color: Colors.black, // Darken the X-axis labels
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    primaryYAxis: NumericAxis(
-                      isVisible: true,
-                      axisLine: AxisLine(
-                        color: Colors.black, // Dark color for the Y-axis line
-                        width: 1, // Increase the width for a bolder line
-                      ),
-                      labelStyle: TextStyle(
-                        color: Colors.black, // Darken the Y-axis labels
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    plotAreaBorderWidth: 0,
-                    legend: Legend(isVisible: true),
-                    tooltipBehavior: TooltipBehavior(enable: true),
-                    series: <ChartSeries>[
-                      StackedColumnSeries<ChartData, String>(
-                        dataSource: [
-                          ChartData(
-                            'Nifty 50',
-                            niftyreturn!,
-                            niftyreturn! < investmentAmount
-                                ? Colors.red
-                                : Colors.green,
-                          ),
-                          ChartData(
-                            stockName,
-                            predictedAmount!,
-                            predictedAmount! < investmentAmount
-                                ? Colors.red
-                                : Colors.green,
-                          ),
-                        ],
-                        xValueMapper: (ChartData data, _) => data.label,
-                        yValueMapper: (ChartData data, _) => data.value,
-                        name: 'Investment',
-                        pointColorMapper: (ChartData data, _) => data.color,
-                        width: 0.5,
-                        borderWidth: 1.5, // Set the border width
-                        borderColor: Colors.black, // Set the border color
-                      ),
-                      StackedColumnSeries<ChartData, String>(
-                        dataSource: [
-                          ChartData('Nifty 50', investmentAmount,
-                              const Color.fromARGB(255, 17, 111, 169)),
-                          ChartData(stockName, investmentAmount,
-                              const Color.fromARGB(255, 17, 111, 169)),
-                        ],
-                        xValueMapper: (ChartData data, _) => data.label,
-                        yValueMapper: (ChartData data, _) => data.value,
-                        name: 'Return',
-                        pointColorMapper: (ChartData data, _) => data.color,
-                        width: 0.5,
-                        borderWidth: 1.5, // Set the border width
-                        borderColor: Colors.black, // Set the border color
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 5,
                       ),
                     ],
                   ),
+                  child: SizedBox(
+                    height: 300,
+                    child: SfCartesianChart(
+                      title: ChartTitle(text: 'Return Comparison ($selectedPeriod)'),
+                      legend: const Legend(
+                          isVisible: true, position: LegendPosition.bottom),
+                      tooltipBehavior: TooltipBehavior(enable: true),
+                      primaryXAxis: CategoryAxis(),
+                      primaryYAxis: NumericAxis(
+                          title: AxisTitle(text: 'Value (₹)'),
+                          labelFormat: '{value}',
+                          minimum: 0,
+                          maximum: (niftyreturn! > predictedAmount!
+                                  ? niftyreturn!
+                                  : predictedAmount!) *
+                              1.1),
+                      series: <CartesianSeries>[
+                        // Series 1: Initial Investment (Fixed Blue Color)
+                        ColumnSeries<ChartData, String>(
+                          dataSource: [
+                            ChartData('Nifty 50', investmentAmount,
+                                const Color.fromARGB(255, 17, 111, 169)),
+                            ChartData(stockName, investmentAmount,
+                                const Color.fromARGB(255, 17, 111, 169)),
+                          ],
+                          xValueMapper: (ChartData data, _) => data.label,
+                          yValueMapper: (ChartData data, _) => data.value,
+                          name: 'Initial Investment',
+                          pointColorMapper: (ChartData data, _) => data.color,
+                          width: 0.7,
+                          spacing: 0.1,
+                          borderWidth: 1.5,
+                          borderColor: Colors.black,
+                        ),
+                        // Series 2: Final Value (Gain/Loss Color)
+                        ColumnSeries<ChartData, String>(
+                          dataSource: [
+                            ChartData(
+                              'Nifty 50',
+                              niftyreturn!,
+                              niftyreturn! < investmentAmount
+                                  ? Colors.red
+                                  : Colors.green,
+                            ),
+                            ChartData(
+                              stockName,
+                              predictedAmount!,
+                              predictedAmount! < investmentAmount
+                                  ? Colors.red
+                                  : Colors.green,
+                            ),
+                          ],
+                          xValueMapper: (ChartData data, _) => data.label,
+                          yValueMapper: (ChartData data, _) => data.value,
+                          name: 'Final Value',
+                          pointColorMapper: (ChartData data, _) => data.color,
+                          width: 0.7,
+                          spacing: 0.1,
+                          borderWidth: 1.5,
+                          borderColor: Colors.black,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+              ],
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -340,7 +347,6 @@ class _StockPredictionPageState extends State<StockPredictionPage>
   }
 }
 
-// Data model for chart
 class ChartData {
   final String label;
   final double value;
@@ -349,38 +355,35 @@ class ChartData {
   ChartData(this.label, this.value, this.color);
 }
 
-class InvestmentInfoCard extends StatelessWidget {
-  final String amount;
-  final String label;
+class StockCompanyDropdown extends StatelessWidget {
+  final String? selectedCompany;
+  final ValueChanged<String?> onChanged;
+  final List<String> companies;
 
-  InvestmentInfoCard({required this.amount, required this.label});
+  const StockCompanyDropdown(
+      {required this.selectedCompany,
+      required this.onChanged,
+      required this.companies});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              spreadRadius: 1),
-        ],
+    return DropdownButtonFormField<String>(
+      value: selectedCompany,
+      decoration: InputDecoration(
+        labelText: 'Select Company',
+        prefixIcon: const Icon(Icons.business),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
       ),
-      child: Column(
-        children: [
-          Text(
-            amount,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        ],
-      ),
+      hint: const Text('Choose a stock to analyze'),
+      items: companies.map((String company) {
+        return DropdownMenuItem<String>(
+          value: company,
+          child: Text(company),
+        );
+      }).toList(),
+      onChanged: onChanged,
     );
   }
 }
@@ -389,7 +392,7 @@ class PeriodSelector extends StatelessWidget {
   final String selectedPeriod;
   final ValueChanged<String> onPeriodSelected;
 
-  PeriodSelector(
+  const PeriodSelector(
       {required this.selectedPeriod, required this.onPeriodSelected});
 
   @override
@@ -404,6 +407,8 @@ class PeriodSelector extends StatelessWidget {
             label: Text(period),
             backgroundColor:
                 selectedPeriod == period ? Colors.blueAccent : Colors.grey[300],
+            labelStyle: TextStyle(
+                color: selectedPeriod == period ? Colors.white : Colors.black),
           ),
         );
       }).toList(),
@@ -418,7 +423,7 @@ class StockInputField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final bool isNumeric;
 
-  StockInputField({
+  const StockInputField({
     required this.label,
     required this.hint,
     required this.icon,
@@ -429,16 +434,16 @@ class StockInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10.0),
         ),
       ),
-      onChanged: onChanged,
-      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
     );
   }
 }

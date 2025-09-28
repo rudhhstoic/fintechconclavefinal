@@ -5,76 +5,115 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class StockAnalysisPage extends StatefulWidget {
-  const StockAnalysisPage({super.key});
+  final String stockSymbol;
+  final String stockName;
+
+  const StockAnalysisPage(
+      {super.key, required this.stockSymbol, required this.stockName});
   @override
   StockAnalysisPageState createState() => StockAnalysisPageState();
 }
 
 class StockAnalysisPageState extends State<StockAnalysisPage> {
-  final _stocks = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'MARUTI.NS'];
-  String? _selectedStock;
+  final _timeRanges = ['1 Month', '3 Months', '6 Months', '1 Year'];
+  String? _selectedRange = '3 Months'; // Default selection
   DateTime? _startDate;
-  DateTime? _endDate = DateTime.now().subtract(const Duration(days: 1));
+  // End date is yesterday to ensure all data is closed and available
+  DateTime? _endDate = DateTime.now().subtract(const Duration(days: 1)); 
+  
   List<double> actualStockPrices = [];
   List<double> predictedStockPrices = [];
   Map<String, dynamic> stockInfo = {};
-  String? _selectedRange;
+  bool _isLoading = false;
+  String _errorMessage = '';
+  bool _modelTrained = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setDateRange(_selectedRange!);
+  }
 
   void _setDateRange(String option) {
     setState(() {
       _selectedRange = option; // Highlight selected option
       _endDate = DateTime.now().subtract(const Duration(days: 1));
       switch (option) {
-        case '1 Week':
-          _startDate = _endDate!.subtract(const Duration(days: 7));
-          break;
         case '1 Month':
-          _startDate =
-              DateTime(_endDate!.year, _endDate!.month - 1, _endDate!.day);
+          _startDate = DateTime(_endDate!.year, _endDate!.month - 1, _endDate!.day);
+          break;
+        case '3 Months':
+          _startDate = DateTime(_endDate!.year, _endDate!.month - 3, _endDate!.day);
+          break;
+        case '6 Months':
+          _startDate = DateTime(_endDate!.year, _endDate!.month - 6, _endDate!.day);
           break;
         case '1 Year':
-          _startDate =
-              DateTime(_endDate!.year - 1, _endDate!.month, _endDate!.day);
+          _startDate = DateTime(_endDate!.year - 1, _endDate!.month, _endDate!.day);
           break;
-        case '3 Years':
-          _startDate =
-              DateTime(_endDate!.year - 3, _endDate!.month, _endDate!.day);
-          break;
-        case '5 Years':
-          _startDate =
-              DateTime(_endDate!.year - 5, _endDate!.month, _endDate!.day);
-          break;
+        default:
+          _startDate = _endDate!.subtract(const Duration(days: 90)); // Default to 3 months
       }
+      // Automatically fetch data when range changes
+      fetchStockData();
     });
+  }
+  
+  // Helper to format dates for Python (yyyy-MM-dd is required by yfinance)
+  String getFormattedDate(DateTime date) {
+    return DateFormat('yyyy-MM-dd').format(date);
   }
 
   Future<void> fetchStockData() async {
-    if (_selectedStock != null && _startDate != null && _endDate != null) {
-      final url = Uri.parse('http://127.0.0.1:5000/analyze_stock');
-      final dateFormat = DateFormat('MM/dd/yyyy');
+    if (_startDate == null || _endDate == null) return;
+    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      actualStockPrices.clear();
+      predictedStockPrices.clear();
+      stockInfo.clear();
+      _modelTrained = false;
+    });
+
+    final url = Uri.parse('http://127.0.0.1:5011/analyse_stock');
+    final String startDateStr = getFormattedDate(_startDate!);
+    final String endDateStr = getFormattedDate(_endDate!);
+
+    try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'stock_name': _selectedStock,
-          'start_date': dateFormat.format(_startDate!).toString(),
-          'end_date': dateFormat.format(_endDate!).toString(),
+        body: json.encode({
+          'stock_name': widget.stockSymbol,
+          'start_date': startDateStr,
+          'end_date': endDateStr,
         }),
       );
 
-      if (mounted && response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == 'success') {
         setState(() {
-          actualStockPrices = List<double>.from(data['actual_stock_price']);
-          predictedStockPrices =
-              List<double>.from(data['predicted_stock_price']);
-          stockInfo = data['stock_info'];
+          actualStockPrices = List<double>.from(data['actual_stock_price'] ?? []);
+          predictedStockPrices = List<double>.from(data['predicted_stock_price'] ?? []);
+          stockInfo = Map<String, dynamic>.from(data['stock_info'] ?? {});
+          _modelTrained = data['model_trained'] ?? false;
+          _errorMessage = '';
         });
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch data')),
-        );
+      } else {
+        setState(() {
+          _errorMessage = data['error'] ?? 'Analysis failed. Try a different date range or stock.';
+        });
       }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to connect to the server or process data: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -82,93 +121,139 @@ class StockAnalysisPageState extends State<StockAnalysisPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stock Analysis'),
+        title: Text('${widget.stockName} Analysis'),
+        backgroundColor: Colors.indigo,
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            children: [
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Select Stock'),
-                items: _stocks.map((String stock) {
-                  return DropdownMenuItem<String>(
-                    value: stock,
-                    child: Text(stock),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // Time Range Selector
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: _timeRanges.map((range) {
+                  return ChoiceChip(
+                    label: Text(range),
+                    selected: _selectedRange == range,
+                    onSelected: (selected) {
+                      if (selected) _setDateRange(range);
+                    },
+                    selectedColor: Colors.indigo,
+                    labelStyle: TextStyle(
+                      color: _selectedRange == range ? Colors.white : Colors.black,
+                    ),
                   );
                 }).toList(),
-                onChanged: (value) => setState(() => _selectedStock = value),
               ),
               const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (var option in [
-                    '1 Week',
-                    '1 Month',
-                    '1 Year',
-                    '3 Years',
-                    '5 Years'
-                  ])
-                    ChoiceChip(
-                      label: Text(option),
-                      selected: _selectedRange == option,
-                      onSelected: (selected) => _setDateRange(option),
-                      selectedColor: const Color.fromARGB(255, 72, 211, 146),
-                      backgroundColor: const Color.fromARGB(255, 243, 221, 221),
-                      labelStyle: TextStyle(
-                          color: _selectedRange == option
-                              ? Colors.white
-                              : Colors.black),
+
+              // Loading/Error State
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator(color: Colors.indigo))
+              else if (_errorMessage.isNotEmpty)
+                Center(
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else if (!_modelTrained)
+                const Center(
+                  child: Text(
+                    'Insufficient data to train the prediction model for the selected period.',
+                    style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              // Stock Information
+              if (stockInfo.isNotEmpty && _modelTrained)
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(stockInfo['longName'] ?? widget.stockName,
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                        const Divider(),
+                        Text('Symbol: ${widget.stockSymbol}', style: const TextStyle(fontSize: 16)),
+                        Text('Sector: ${stockInfo['sector']}', style: const TextStyle(fontSize: 16)),
+                        Text('Industry: ${stockInfo['industry']}', style: const TextStyle(fontSize: 16)),
+                        const SizedBox(height: 10),
+                        Text('Market Cap: ${NumberFormat.compactCurrency(symbol: '₹').format(stockInfo['marketCap'])}'),
+                        Text('P/E ratio: ${stockInfo['priceToEarningsRatio']?.toStringAsFixed(2) ?? 'N/A'}'),
+                        Text('ROE: ${(stockInfo['returnOnEquity'] * 100).toStringAsFixed(2)}%'),
+                        Text('Dividend Yield: ${(stockInfo['dividendYield'] * 100).toStringAsFixed(2)}%'),
+                      ],
                     ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: fetchStockData,
-                child: const Text('Analyze Stock'),
-              ),
-              const SizedBox(height: 20),
-              if (stockInfo.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Stock Info:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Name: ${stockInfo['longName']}'),
-                    Text('Industry: ${stockInfo['industry']}'),
-                    Text('Sector: ${stockInfo['sector']}'),
-                    Text('Market Cap: ${stockInfo['marketCap']}'),
-                    Text('ROE: ${stockInfo['returnOnEquity']}'),
-                    Text('Dividend Yield: ${stockInfo['dividendYield']}'),
-                    Text('P/E ratio: ${stockInfo['priceToEarningsRatio']}'),
-                  ],
+                  ),
                 ),
               const SizedBox(height: 20),
-              if (actualStockPrices.isNotEmpty &&
-                  predictedStockPrices.isNotEmpty)
-                SizedBox(
-                  height: 400, // Maintain large chart size
-                  child: SfCartesianChart(
-                    title: ChartTitle(text: 'Stock Prices Analysis'),
-                    legend: Legend(
-                      isVisible: false,
-                      position: LegendPosition
-                          .bottom, // Position legend below the chart
-                    ),
-                    tooltipBehavior: TooltipBehavior(enable: true),
-                    series: <ChartSeries>[
-                      LineSeries<double, int>(
-                        name: 'Price',
-                        dataSource: actualStockPrices,
-                        xValueMapper: (double price, int index) => index,
-                        yValueMapper: (double price, _) => price,
-                        dataLabelSettings:
-                            const DataLabelSettings(isVisible: false),
+
+              // Stock Price Chart
+              if (actualStockPrices.isNotEmpty && predictedStockPrices.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 5,
                       ),
                     ],
                   ),
+                  child: SizedBox(
+                    height: 400, // Maintain large chart size
+                    child: SfCartesianChart(
+                      title: ChartTitle(text: 'Actual vs. Predicted Price'),
+                      legend: const Legend( // ENABLED LEGEND
+                        isVisible: true,
+                        position: LegendPosition.bottom,
+                      ),
+                      tooltipBehavior: TooltipBehavior(enable: true),
+                      primaryXAxis: NumericAxis(
+                        title: AxisTitle(text: 'Data Points (Time)'),
+                      ),
+                      primaryYAxis: NumericAxis(
+                        title: AxisTitle(text: 'Price (₹)'),
+                        labelFormat: '{value}',
+                      ),
+                      series: <CartesianSeries>[
+                        // 1. Actual Stock Price Line
+                        LineSeries<double, int>(
+                          name: 'Actual Price',
+                          dataSource: actualStockPrices,
+                          xValueMapper: (double price, int index) => index,
+                          yValueMapper: (double price, _) => price,
+                          color: Colors.blue, // Actual Price in Blue
+                          dataLabelSettings:
+                              const DataLabelSettings(isVisible: false),
+                        ),
+                        // 2. Predicted Stock Price Line (ADDED THIS SERIES)
+                        LineSeries<double, int>(
+                          name: 'Predicted Price',
+                          dataSource: predictedStockPrices,
+                          xValueMapper: (double price, int index) => index,
+                          yValueMapper: (double price, _) => price,
+                          color: Colors.red, // Predicted Price in Red
+                          dataLabelSettings:
+                              const DataLabelSettings(isVisible: false),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

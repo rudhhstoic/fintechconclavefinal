@@ -4,17 +4,18 @@ import os
 # List of Flask apps with their corresponding ports and hosts
 host = "127.0.0.1"
 apps = [
-    ("botflask.py", host, 5000),  # Runs on localhost:5000  
-    ("statementflask.py", host, 5001),
-    ("stock_predict.py", host, 5002),
-    ("login_registerflask.py",host, 5003),
-    ("managementflask.py", host, 5004),
-    ("sqlconnect.py",host,5005),
-    ("tax.py",host,5006),
-    ("rem.py",host,5007),
-    ("article.py",host,5008),
-    ("predictions.py",host,5009),
-    ("budget_recom.py",host,5010)
+    ("FinTech/backend/botflask.py", host, 5000),  # Runs on localhost:5000
+    ("FinTech/backend/statementflask.py", host, 5001),
+    ("FinTech/backend/stock_predict.py", host, 5002),
+    ("FinTech/backend/login_registerflask.py",host, 5003),
+    ("FinTech/backend/managementflask.py", host, 5004),
+    ("FinTech/backend/sqlconnect.py",host,5005),
+    ("FinTech/backend/tax.py",host,5006),
+    ("FinTech/backend/rem.py",host,5007),
+    ("FinTech/backend/article.py",host,5008),
+    ("FinTech/backend/predictions.py",host,5009),
+    ("FinTech/backend/budget_recom.py",host,5010),
+    ("FinTech/backend/stockflask.py", host, 5011)
     # Add more apps as needed, with desired host and port
 ]
 

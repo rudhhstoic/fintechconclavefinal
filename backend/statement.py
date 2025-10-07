@@ -4,13 +4,20 @@ from recommend import FinancialAnalyzer  as fa
 import copy
 
 def extract(df,date,debit,credit,balance):
+    required_cols = [date, debit, credit, balance]
+    if not all(col in df.columns for col in required_cols):
+        raise ValueError(f"Required columns {required_cols} not found in DataFrame")
+
     li = []
     for i in df[balance]:
         clean_val = str(i).replace(',', '').strip()
         if clean_val == '':
             li.append(0.0)
         else:
-            li.append(float(clean_val))
+            try:
+                li.append(float(clean_val))
+            except ValueError:
+                li.append(0.0)
     df[balance] = li
 
     li = []
@@ -21,11 +28,14 @@ def extract(df,date,debit,credit,balance):
         val = val.replace('/',' ')
         val = val.strip()
         mon = val.split(' ')
-        if len(mon) == 3 and mon[1] in dic:
-            mon[1] = dic[mon[1]]
-            if len(mon[2]) == 2:
-                mon[2] = '20'+mon[2]
-            val = ' '.join(mon)
+        try:
+            if len(mon) == 3 and mon[1] in dic:
+                mon[1] = dic[mon[1]]
+                if len(mon[2]) == 2:
+                    mon[2] = '20'+mon[2]
+                val = ' '.join(mon)
+        except IndexError:
+            pass  # Keep original val if parsing fails
         li.append(val)
     df[date] = li
 
@@ -35,7 +45,10 @@ def extract(df,date,debit,credit,balance):
         if clean_val == '':
             li.append(0)
         else:
-            li.append(float(clean_val))
+            try:
+                li.append(float(clean_val))
+            except ValueError:
+                li.append(0)
     df[debit] = li
 
     li = []
@@ -44,7 +57,10 @@ def extract(df,date,debit,credit,balance):
         if clean_val == '':
             li.append(0)
         else:
-            li.append(float(clean_val))
+            try:
+                li.append(float(clean_val))
+            except ValueError:
+                li.append(0)
     df[credit] = li
     return pd.DataFrame({'Date':df[date],'Debit':df[debit],'Credit':df[credit],'Balance':df[balance]})
 
@@ -75,6 +91,9 @@ def read_and_concat_tables(file_path,  bank):
     ob = fa()
     # Display the combined DataFrame
     if bank == 'sbi':
+        required_cols = ['Column 1', 'Column 5', 'Column 6', 'Column 7']
+        if not all(col in combined_df.columns for col in required_cols):
+            raise ValueError(f"Required columns {required_cols} not found in SBI statement")
         val = extract(combined_df,'Column 1','Column 5','Column 6','Column 7')
         val = val[val['Date'].str.match(r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', na=False)]
         chart_data = copy.deepcopy(val)
@@ -82,27 +101,44 @@ def read_and_concat_tables(file_path,  bank):
         return [chart_data, analysis]
 
     elif bank == 'canara':
-        val = extract(pd.DataFrame(combined_df[10:len(combined_df['Column 1'])-2]),'Column 2','Column 6','Column 7','Column 8')
+        required_cols = ['Column 2', 'Column 6', 'Column 7', 'Column 8']
+        if not all(col in combined_df.columns for col in required_cols):
+            raise ValueError(f"Required columns {required_cols} not found in Canara statement")
+        sliced_df = combined_df.iloc[10:combined_df.shape[0]-2]
+        val = extract(sliced_df,'Column 2','Column 6','Column 7','Column 8')
         val = val[val['Date'].str.match(r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', na=False)]
         chart_data = copy.deepcopy(val)
         analysis = ob.analyse(val)
         return [chart_data, analysis]
 
     elif bank == 'axis':
-        val = extract(pd.DataFrame(combined_df[1:len(combined_df['Column 1'])-2]),'Column 1','Column 4','Column 5','Column 6')
+        required_cols = ['Column 1', 'Column 4', 'Column 5', 'Column 6']
+        if not all(col in combined_df.columns for col in required_cols):
+            raise ValueError(f"Required columns {required_cols} not found in Axis statement")
+        sliced_df = combined_df.iloc[1:combined_df.shape[0]-2]
+        val = extract(sliced_df,'Column 1','Column 4','Column 5','Column 6')
         val = val[val['Date'].str.match(r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', na=False)]
         chart_data = copy.deepcopy(val)
         analysis = ob.analyse(val)
         return [chart_data, analysis]
 
     elif bank == 'hdfc':
+        if 'Column 7' not in combined_df.columns:
+            raise ValueError("Required column 'Column 7' not found in HDFC statement")
         combined_df = combined_df[combined_df['Column 7'] != '']
-        val = extract(pd.DataFrame(combined_df[1:len(combined_df['Column 1'])-4]),'Column 1','Column 5','Column 6','Column 7')
+        required_cols = ['Column 1', 'Column 5', 'Column 6', 'Column 7']
+        if not all(col in combined_df.columns for col in required_cols):
+            raise ValueError(f"Required columns {required_cols} not found in HDFC statement")
+        sliced_df = combined_df.iloc[1:combined_df.shape[0]-4]
+        val = extract(sliced_df,'Column 1','Column 5','Column 6','Column 7')
         val = val[val['Date'].str.match(r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', na=False)]
         chart_data = copy.deepcopy(val)
         analysis = ob.analyse(val)
         return [chart_data, analysis]
     else:
+        required_cols = ['Column 1', 'Column 5', 'Column 6', 'Column 7']
+        if not all(col in combined_df.columns for col in required_cols):
+            raise ValueError(f"Required columns {required_cols} not found in statement")
         val = extract(combined_df,'Column 1','Column 5','Column 6','Column 7')
         val = val[val['Date'].str.match(r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', na=False)]
         chart_data = copy.deepcopy(val)

@@ -40,8 +40,8 @@ db = SQLAlchemy(app)
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # For NewsAPI
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # For chatbot
 # Twilio configuration
-account_sid = 'AC530541f75b7d8a1949c5bd148ac63b43'  # Replace with your Twilio Account SID
-auth_token = '645ca657c411d658f9a6116d0012eb11'      # Replace with your Twilio Auth Token
+account_sid = 'ACc4d98c59cb9035467810af9b427704f7'  # Replace with your Twilio Account SID
+auth_token = '64b75198565a9d6f673117f5fc3d627e'      # Replace with your Twilio Auth Token
 twilio_whatsapp_number = 'whatsapp:+14155238886'     # Twilio's WhatsApp sandbox number
 client = Client(account_sid, auth_token)
 
@@ -973,7 +973,79 @@ def add_budget(serial_id):
 
     return jsonify({
         "message": "Budget added successfully"})
+@app.route('/analyse_stock', methods=['POST'])
+def analyse_stock():
+    try:
+        data = request.get_json()
+        stock_symbol = data.get('stock_name')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        if not all([stock_symbol, start_date, end_date]):
+            return jsonify({
+                'status': 'error',
+                'error': 'Missing required parameters: stock_name, start_date, end_date'
+            }), 400
+
+        # Fetch stock data
+        stock = yf.Ticker(stock_symbol)
+        
+        # Get stock info
+        try:
+            stock_info = stock.info
+        except:
+            stock_info = {}
+        
+        # Get historical data
+        hist_data = stock.history(start=start_date, end=end_date)
+        
+        if hist_data.empty:
+            return jsonify({
+                'status': 'error',
+                'error': 'No data available for the given date range and stock symbol'
+            }), 400
+
+        # Get actual prices
+        actual_prices = hist_data['Close'].values.tolist()
+        
+        # Simple moving average prediction (lightweight alternative to LSTM)
+        if len(actual_prices) >= 20:
+            predicted_prices = []
+            for i in range(10, len(actual_prices)):
+                # Simple moving average prediction
+                avg = sum(actual_prices[i-10:i]) / 10
+                predicted_prices.append(avg)
+            model_trained = True
+        else:
+            predicted_prices = []
+            model_trained = False
+
+        # Prepare response
+        response_data = {
+            'status': 'success',
+            'model_trained': model_trained,
+            'actual_stock_price': actual_prices,
+            'predicted_stock_price': predicted_prices,
+            'stock_info': {
+                'longName': stock_info.get('longName', 'N/A'),
+                'sector': stock_info.get('sector', 'N/A'),
+                'industry': stock_info.get('industry', 'N/A'),
+                'marketCap': stock_info.get('marketCap', 0),
+                'priceToEarningsRatio': stock_info.get('forwardPE', 0),
+                'returnOnEquity': stock_info.get('returnOnEquity', 0) or 0,
+                'dividendYield': stock_info.get('dividendYield', 0) or 0
+            }
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': f'An error occurred during analysis: {str(e)}'
+        }), 500
+
 
 if __name__ == "__main__":
     #app.run(debug=True, port=5000, ssl_context=('cert.pem', 'key.pem'))
-    app.run(debug=True, port=5000)
+    app.run(debug=True,host="0.0.0.0", port=5000)

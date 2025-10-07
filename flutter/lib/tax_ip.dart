@@ -1,7 +1,10 @@
+// Enhanced tax_ip.dart - Improved responsiveness, added form validation, currency formatting, collapsible sections, professional styling
+
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/tax_calculate.dart';
+import 'package:flutter_application_1/tax_calculate.dart'; // Update to match your file structure
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,9 +15,37 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Tax Calculator',
-      home: TaxCalculatorInputPage(),
+      theme: ThemeData(
+        primaryColor: Colors.blue.shade800,
+        scaffoldBackgroundColor: Colors.transparent,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 12,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.white,
+          labelStyle: TextStyle(color: Colors.grey.shade700),
+          prefixStyle: TextStyle(color: Colors.grey.shade900),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue.shade700,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+      home: const TaxCalculatorInputPage(),
     );
   }
 }
@@ -27,67 +58,92 @@ class TaxCalculatorInputPage extends StatefulWidget {
 }
 
 class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
+  final _formKey = GlobalKey<FormState>();
   String selectedFinancialYear = '2023-24';
   String selectedAgeGroup = 'Below 60';
   String selectedEmploymentStatus = 'Salaried';
-  double basicIncome = 0;
-  bool hasSpecialIncome = false;
+  final NumberFormat currencyFormat = NumberFormat('#,###');
 
-  // Fields for additional income
-  double incomeFromSavingsInterest = 0;
-  double interestOnDeposits = 0;
-  double incomeFromRentals = 0;
-  double otherIncome = 0;
+  // Input controllers for better control
+  final TextEditingController basicIncomeController = TextEditingController();
+  final TextEditingController savingsInterestController = TextEditingController();
+  final TextEditingController depositsInterestController = TextEditingController();
+  final TextEditingController rentalsIncomeController = TextEditingController();
+  final TextEditingController otherIncomeController = TextEditingController();
+  final TextEditingController hraController = TextEditingController();
+  final TextEditingController specialAllowanceController = TextEditingController();
+  final TextEditingController dearnessAllowanceController = TextEditingController();
+  final TextEditingController epfController = TextEditingController();
+  final TextEditingController equityController = TextEditingController();
+  final TextEditingController debtController = TextEditingController();
+  final TextEditingController realEstateController = TextEditingController();
+  final TextEditingController unlistedSharesController = TextEditingController();
+  final TextEditingController ded80CController = TextEditingController();
+  final TextEditingController ded80DController = TextEditingController();
+  final TextEditingController ded80EController = TextEditingController();
+  final TextEditingController ded80GController = TextEditingController();
 
-  // Salaried specific fields
-  double hraReceived = 0;
-  double specialAllowance = 0;
-  double dearnessAllowance = 0;
-  double epfContribution = 0;
+  bool showSpecialIncome = false;
 
-  // Capital gains
-  double equityInvestments = 0;
-  double debtInvestments = 0;
-  double realEstateInvestments = 0;
-  double unlistedSharesInvestments = 0;
-
-  // Deductions
-  double deduction80C = 0;
-  double deduction80D = 0;
-  double deduction80E = 0;
-  double deduction80G = 0;
-  void onCalculateTaxPressed() {
-    Map<String, dynamic> userInputData = {
-      'financial_year': selectedFinancialYear,
-      'basic_income': basicIncome,
-      'special_income': hasSpecialIncome
-          ? incomeFromSavingsInterest +
-              interestOnDeposits +
-              incomeFromRentals +
-              otherIncome
-          : 0,
-      'hra_received': hraReceived,
-      'deductions': {
-        'deduction80C': deduction80C,
-        'deduction80D': deduction80D,
-        'deduction80E': deduction80E,
-        'deduction80G': deduction80G,
-      },
-      'capital_gains': {
-        'equityInvestments': equityInvestments,
-        'debtInvestments': debtInvestments,
-        'realEstateInvestments': realEstateInvestments,
-        'unlistedSharesInvestments': unlistedSharesInvestments,
-      },
-    };
-
-    calculateTax(context, userInputData);
+  @override
+  void dispose() {
+    // Dispose controllers
+    basicIncomeController.dispose();
+    savingsInterestController.dispose();
+    depositsInterestController.dispose();
+    rentalsIncomeController.dispose();
+    otherIncomeController.dispose();
+    hraController.dispose();
+    specialAllowanceController.dispose();
+    dearnessAllowanceController.dispose();
+    epfController.dispose();
+    equityController.dispose();
+    debtController.dispose();
+    realEstateController.dispose();
+    unlistedSharesController.dispose();
+    ded80CController.dispose();
+    ded80DController.dispose();
+    ded80EController.dispose();
+    ded80GController.dispose();
+    super.dispose();
   }
 
-  Future<void> calculateTax(
-      BuildContext context, Map<String, dynamic> userData) async {
-    final url = Uri.parse(
-        'http://127.0.0.1:5000/calculate_tax'); // Update with your backend URL
+  void onCalculateTaxPressed() {
+    if (_formKey.currentState!.validate()) {
+      final userInputData = {
+        'financial_year': selectedFinancialYear,
+        'basic_income': _parseCurrency(basicIncomeController.text),
+        'special_income': showSpecialIncome
+            ? _parseCurrency(savingsInterestController.text) +
+              _parseCurrency(depositsInterestController.text) +
+              _parseCurrency(rentalsIncomeController.text) +
+              _parseCurrency(otherIncomeController.text)
+            : 0.0,
+        'hra_received': _parseCurrency(hraController.text),
+        'deductions': {
+          'deduction80C': _parseCurrency(ded80CController.text),
+          'deduction80D': _parseCurrency(ded80DController.text),
+          'deduction80E': _parseCurrency(ded80EController.text),
+          'deduction80G': _parseCurrency(ded80GController.text),
+        },
+        'capital_gains': {
+          'equityInvestments': _parseCurrency(equityController.text),
+          'debtInvestments': _parseCurrency(debtController.text),
+          'realEstateInvestments': _parseCurrency(realEstateController.text),
+          'unlistedSharesInvestments': _parseCurrency(unlistedSharesController.text),
+        },
+      };
+
+      calculateTax(context, userInputData);
+    }
+  }
+
+  double _parseCurrency(String value) {
+    return double.tryParse(value.replaceAll(',', '')) ?? 0.0;
+  }
+
+  Future<void> calculateTax(BuildContext context, Map<String, dynamic> userData) async {
+    final url = Uri.parse('http://127.0.0.1:5000/calculate_tax');
     try {
       final response = await http.post(
         url,
@@ -104,406 +160,254 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
         throw Exception('Failed to calculate tax');
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $error')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
     }
   }
 
-  // Special Income dropdown visibility
-  bool showSpecialIncome = false;
-
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isWideScreen = screenSize.width > 600;
+    final padding = isWideScreen ? 32.0 : 16.0;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
         title: const Text(
           'Tax Calculator',
-          style: TextStyle(
-            fontFamily: 'Lobster',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontFamily: 'Lobster', fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color.fromARGB(255, 0, 12, 80), Colors.transparent],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen
-          },
         ),
       ),
       body: Container(
-        height: double
-            .infinity, // Ensures the container takes up full screen height
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            colors: [Colors.blue.shade800, Colors.white],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              // Making the body scrollable
-              child: Container(
-                color: Colors.transparent, // Setting background color to white
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40), // Spacing below the back button
-                    // Heading section
-                    // Box containing the input fields for Employment Status and Basic Salary
-                    _buildInputBox(
-                      leftColumn: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Employment Status',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          DropdownButton<String>(
-                            value: selectedEmploymentStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedEmploymentStatus = value!;
-                              });
-                            },
-                            items: ['Salaried', 'Self-Employed']
-                                .map((status) => DropdownMenuItem(
-                                    value: status, child: Text(status)))
-                                .toList(),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Basic Salary',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          _buildTextField(
-                            label: 'Enter Basic Salary',
-                            onChanged: (value) {
-                              basicIncome = double.tryParse(value) ?? 0;
-                            },
-                          ),
-                        ],
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.all(padding),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildBasicInfoSection(screenSize, padding, isWideScreen),
+                      SizedBox(height: padding),
+                      _buildExpandableSection('Special Income', _buildSpecialIncomeFields(padding)),
+                      SizedBox(height: padding),
+                      _buildExpandableSection('Capital Gains', _buildCapitalGainsFields(padding)),
+                      SizedBox(height: padding),
+                      _buildExpandableSection('Salaried Income', _buildSalariedIncomeFields(padding)),
+                      SizedBox(height: padding),
+                      _buildExpandableSection('Deductions', _buildDeductionsFields(padding)),
+                      SizedBox(height: padding),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: onCalculateTaxPressed,
+                          child: const Text('Calculate Tax'),
+                        ),
                       ),
-                      rightColumn: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text(
-                            'Financial Year',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          DropdownButton<String>(
-                            value: selectedFinancialYear,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedFinancialYear = value!;
-                              });
-                            },
-                            items: ['2023-24', '2022-23', '2024-25']
-                                .map((year) => DropdownMenuItem(
-                                    value: year, child: Text(year)))
-                                .toList(),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Age Group',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          DropdownButton<String>(
-                            value: selectedAgeGroup,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedAgeGroup = value!;
-                              });
-                            },
-                            items: ['Below 60', '60-80', 'Above 80']
-                                .map((age) => DropdownMenuItem(
-                                    value: age, child: Text(age)))
-                                .toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSpecialIncomeSection(),
-                    const SizedBox(height: 20),
-                    _buildCapitalGainsSection(),
-                    const SizedBox(height: 20),
-                    _buildSalariedIncomeSection(),
-                    const SizedBox(height: 20),
-                    _buildDeductionsSection(),
-                  ],
+                    ]),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputBox(
-      {required Widget leftColumn, required Widget rightColumn}) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.blue, // Light black border color
-          width: 2,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.blueAccent,
-            blurRadius: 8,
-            offset: Offset(0, 4),
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(child: leftColumn), // Left side
-          const SizedBox(width: 16),
-          Expanded(child: rightColumn), // Right side
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required Function(String) onChanged,
-  }) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 400),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
         ),
-        keyboardType: TextInputType.number,
-        onChanged: onChanged,
       ),
     );
   }
 
-  Widget _buildSpecialIncomeSection() {
-    return _buildSectionBox(
-      title: 'Special Income',
+  Widget _buildBasicInfoSection(Size screenSize, double padding, bool isWideScreen) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: isWideScreen
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildEmploymentColumn(padding)),
+                  SizedBox(width: padding),
+                  Expanded(child: _buildYearAgeColumn(padding)),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildEmploymentColumn(padding),
+                  SizedBox(height: padding),
+                  _buildYearAgeColumn(padding),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildEmploymentColumn(double padding) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Employment Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+        SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedEmploymentStatus,
+          onChanged: (value) => setState(() => selectedEmploymentStatus = value!),
+          items: ['Salaried', 'Self-Employed'].map((status) => DropdownMenuItem(value: status, child: Text(status))).toList(),
+        ),
+        SizedBox(height: padding),
+        Text('Basic Salary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+        SizedBox(height: 8),
+        _buildCurrencyField(basicIncomeController, 'Enter Basic Salary'),
+      ],
+    );
+  }
+
+  Widget _buildYearAgeColumn(double padding) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Financial Year', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+        SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedFinancialYear,
+          onChanged: (value) => setState(() => selectedFinancialYear = value!),
+          items: ['2023-24', '2022-23', '2024-25'].map((year) => DropdownMenuItem(value: year, child: Text(year))).toList(),
+        ),
+        SizedBox(height: padding),
+        Text('Age Group', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+        SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedAgeGroup,
+          onChanged: (value) => setState(() => selectedAgeGroup = value!),
+          items: ['Below 60', '60-80', 'Above 80'].map((age) => DropdownMenuItem(value: age, child: Text(age))).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandableSection(String title, Widget content) {
+    return Card(
+      child: ExpansionTile(
+        title: Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+        children: [content],
+      ),
+    );
+  }
+
+  Widget _buildSpecialIncomeFields(double padding) {
+    return Padding(
+      padding: EdgeInsets.all(padding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CheckboxListTile(
-            title: const Text("Include Special Income"),
+          SwitchListTile(
+            title: Text('Include Special Income', style: TextStyle(color: Colors.grey.shade800)),
             value: showSpecialIncome,
-            onChanged: (bool? value) {
-              setState(() {
-                showSpecialIncome = value!;
-              });
-            },
+            activeColor: Colors.blue.shade700,
+            onChanged: (value) => setState(() => showSpecialIncome = value),
           ),
           if (showSpecialIncome) ...[
-            _buildTextField(
-              label: 'Income from Savings Interest',
-              onChanged: (value) {
-                incomeFromSavingsInterest = double.tryParse(value) ?? 0;
-              },
-            ),
-            const SizedBox(height: 10),
-            _buildTextField(
-              label: 'Interest on Deposits',
-              onChanged: (value) {
-                interestOnDeposits = double.tryParse(value) ?? 0;
-              },
-            ),
-            const SizedBox(height: 10),
-            _buildTextField(
-              label: 'Income from Rentals',
-              onChanged: (value) {
-                incomeFromRentals = double.tryParse(value) ?? 0;
-              },
-            ),
-            const SizedBox(height: 10),
-            _buildTextField(
-              label: 'Other Income',
-              onChanged: (value) {
-                otherIncome = double.tryParse(value) ?? 0;
-              },
-            ),
+            SizedBox(height: padding / 2),
+            _buildCurrencyField(savingsInterestController, 'Savings Interest'),
+            SizedBox(height: padding / 2),
+            _buildCurrencyField(depositsInterestController, 'Deposits Interest'),
+            SizedBox(height: padding / 2),
+            _buildCurrencyField(rentalsIncomeController, 'Rental Income'),
+            SizedBox(height: padding / 2),
+            _buildCurrencyField(otherIncomeController, 'Other Income'),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildCapitalGainsSection() {
-    return _buildSectionBox(
-      title: 'Capital Gains',
+  Widget _buildCapitalGainsFields(double padding) {
+    return Padding(
+      padding: EdgeInsets.all(padding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTextField(
-            label: 'Equity Investments',
-            onChanged: (value) {
-              equityInvestments = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: 'Debt Investments',
-            onChanged: (value) {
-              debtInvestments = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: 'Real Estate Investments',
-            onChanged: (value) {
-              realEstateInvestments = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: 'Unlisted Shares Investments',
-            onChanged: (value) {
-              unlistedSharesInvestments = double.tryParse(value) ?? 0;
-            },
-          ),
+          _buildCurrencyField(equityController, 'Equity Investments'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(debtController, 'Debt Investments'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(realEstateController, 'Real Estate'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(unlistedSharesController, 'Unlisted Shares'),
         ],
       ),
     );
   }
 
-  Widget _buildSalariedIncomeSection() {
-    return _buildSectionBox(
-      title: 'Salaried Income',
+  Widget _buildSalariedIncomeFields(double padding) {
+    return Padding(
+      padding: EdgeInsets.all(padding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTextField(
-            label: 'HRA Received',
-            onChanged: (value) {
-              hraReceived = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: 'Special Allowance',
-            onChanged: (value) {
-              specialAllowance = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: 'Dearness Allowance',
-            onChanged: (value) {
-              dearnessAllowance = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: 'EPF Contribution',
-            onChanged: (value) {
-              epfContribution = double.tryParse(value) ?? 0;
-            },
-          ),
+          _buildCurrencyField(hraController, 'HRA Received'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(specialAllowanceController, 'Special Allowance'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(dearnessAllowanceController, 'Dearness Allowance'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(epfController, 'EPF Contribution'),
         ],
       ),
     );
   }
 
-  Widget _buildDeductionsSection() {
-    return _buildSectionBox(
-      title: 'Deductions',
+  Widget _buildDeductionsFields(double padding) {
+    return Padding(
+      padding: EdgeInsets.all(padding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTextField(
-            label: '80C Deductions',
-            onChanged: (value) {
-              deduction80C = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: '80D Deductions',
-            onChanged: (value) {
-              deduction80D = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: '80E Deductions',
-            onChanged: (value) {
-              deduction80E = double.tryParse(value) ?? 0;
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            label: '80G Deductions',
-            onChanged: (value) {
-              deduction80G = double.tryParse(value) ?? 0;
-            },
-          ),
-          SizedBox(height: 20),
-          Center(
-            child: ElevatedButton(
-              onPressed: onCalculateTaxPressed,
-              child: Text(
-                'Calculate Tax',
-                selectionColor: Colors.blue,
-              ),
-            ),
-          ),
+          _buildCurrencyField(ded80CController, '80C Deductions'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(ded80DController, '80D Deductions'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(ded80EController, '80E Deductions'),
+          SizedBox(height: padding / 2),
+          _buildCurrencyField(ded80GController, '80G Deductions'),
         ],
       ),
     );
   }
 
-  Widget _buildSectionBox({required String title, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.blue,
-          width: 2,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.blueAccent,
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
+  Widget _buildCurrencyField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixText: '₹ ',
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
+      keyboardType: TextInputType.number,
+      onChanged: (value) {
+        final cleanValue = value.replaceAll(',', '');
+        final formatted = currencyFormat.format(double.tryParse(cleanValue) ?? 0);
+        if (formatted != value) {
+          controller.value = TextEditingValue(
+            text: formatted,
+            selection: TextSelection.collapsed(offset: formatted.length),
+          );
+        }
+      },
+      validator: (value) {
+        if (value != null && value.isNotEmpty && double.tryParse(value.replaceAll(',', '')) == null) {
+          return 'Invalid number';
+        }
+        return null;
+      },
     );
   }
 }

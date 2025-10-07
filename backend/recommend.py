@@ -18,7 +18,8 @@ class FinancialAnalyzer:
     def process_transaction_data(self,data):
 
         # Ensure the Date column is in datetime format
-        data['Date'] = pd.to_datetime(data['Date'], format='%d %b %Y')
+        data['Date'] = pd.to_datetime(data['Date'], format='%d %b %Y', errors='coerce')
+        data = data.dropna(subset=['Date'])
 
         # Extract the month from the Date column
         data['Month'] = data['Date'].dt.to_period('M')
@@ -38,11 +39,11 @@ class FinancialAnalyzer:
     def generate_overall_recommendations(self,data):
 
         overall_summary = {
-        'Total Debit': data['Debit'].sum(),
-        'Total Credit': data['Credit'].sum(),
-        'Average Balance': data['Balance'].mean(),    #statement average balance
+        'Total Debit': data['Debit'].fillna(0).sum(),
+        'Total Credit': data['Credit'].fillna(0).sum(),
+        'Average Balance': data['Balance'].fillna(0).mean(),    #statement average balance
         'Total Transactions': data.shape[0],
-        'Net Flow': data['Credit'].sum() - data['Debit'].sum(),}
+        'Net Flow': data['Credit'].fillna(0).sum() - data['Debit'].fillna(0).sum(),}
         recommendations = []
 
         # Analyze overall summary to give recommendations
@@ -58,6 +59,14 @@ class FinancialAnalyzer:
         return recommendations
 
     def generate_monthly_recommendations(self,monthly_summary):
+        # Drop rows with NaN in features
+        monthly_summary = monthly_summary.dropna(subset=['avg_balance', 'total_debit', 'total_credit', 'net_flow'])
+        
+        if len(monthly_summary) == 0:
+            monthly_summary['Cluster'] = 0
+            monthly_summary['Recommendation'] = "Insufficient data for clustering. Review your transactions."
+            return monthly_summary
+
         # Prepare features for clustering
         features = monthly_summary[['avg_balance', 'total_debit', 'total_credit', 'net_flow']]
         

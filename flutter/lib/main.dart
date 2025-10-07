@@ -13,6 +13,8 @@ import 'mutual_fund_page.dart';
 import 'tax_ip.dart';
 import 'reminder.dart';
 import 'article.dart';
+import 'theme_provider.dart';
+import 'home.dart'; 
 import 'package:provider/provider.dart';
 
 void main() {
@@ -22,6 +24,9 @@ void main() {
         ChangeNotifierProvider(
             create: (_) =>
                 AuthProvider()), // Auth Provider for state management
+        ChangeNotifierProvider(
+            create: (_) =>
+                ThemeProvider()), // Theme Provider for dark/light mode
       ],
       child: MyApp(),
     ),
@@ -33,32 +38,45 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FinBuild',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Color.fromARGB(255, 22, 1, 58),
-        ),
-        useMaterial3: true,
-      ),
-      routes: {
-        '/': (context) => LoginScreen(),
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/dashboard': (context) => HomePage(),
-        //'/dashboard': (context) => const DashboardScreen(),
-        '/botpopup': (context) => const ChatbotScreen(),
-        '/personalinfo': (context) => const PersonalInfoScreen(),
-        '/statement_analyse': (context) => UploadPage(),
-        '/stock': (context) => StockPredictionPage(),
-        '/management': (context) => const HomeManage(),
-        '/mutualfunds': (context) => MutualFundPage(),
-        '/tax': (context) => TaxCalculatorInputPage(),
-        '/reminder': (context) => ReminderPage(),
-        '/article': (context) => FinanceHomePage(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'FinBuild',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Color.fromARGB(255, 22, 1, 58),
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Color.fromARGB(255, 22, 1, 58),
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: themeProvider.themeMode,
+          routes: {
+            '/': (context) => LandingPage(),
+            '/login': (context) => LoginScreen(),
+            '/register': (context) => RegisterScreen(),
+            '/dashboard': (context) => HomePage(),
+            //'/dashboard': (context) => const DashboardScreen(),
+            '/botpopup': (context) => const ChatbotScreen(),
+            '/personalinfo': (context) => const PersonalInfoScreen(),
+            '/statement_analyse': (context) => UploadPage(),
+            '/stock': (context) => StockPredictionPage(),
+            '/management': (context) => const HomeManage(),
+            '/mutualfunds': (context) => MutualFundPage(),
+            '/tax': (context) => TaxCalculatorInputPage(),
+            '/reminder': (context) => ReminderPage(),
+            '/article': (context) => FinanceHomePage(),
+          },
+          initialRoute: '/',
+        );
       },
-      initialRoute: '/',
     );
   }
 }

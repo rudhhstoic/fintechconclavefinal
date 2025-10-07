@@ -1,260 +1,568 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'api_services.dart';
 import 'package:provider/provider.dart';
+import 'login_page.dart';
+import 'api_services.dart';
 import 'auth_provider.dart';
+import 'email_validator_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+  final ApiService _apiService = ApiService();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
+
+  FocusNode _usernameFocusNode = FocusNode();
+  FocusNode _passwordFocusNode = FocusNode();
+
   bool _isLoading = false;
   bool _isObscure = true;
   String _message = '';
-  bool _isHovered = false; // Variable to track hover state
+  bool _isValidatingEmail = false;
+  bool _isEmailValid = false;
+  String _emailValidationMessage = '';
+  Timer? _emailValidationTimer;
 
-  Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _isLoading = true;
-    });
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
-    final result = await _apiService.register(
-      _usernameController.text.trim(),
-      _passwordController.text.trim(),
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1000),
     );
-
-    setState(() {
-      _isLoading = false;
-      _message = result['message'];
-    });
-
-    if (result['success']) {
-      int serialId = result['serial_id'];
-      String name = result['name'];
-      Provider.of<AuthProvider>(context, listen: false)
-          .setSerialId(serialId, name);
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_message)),
-      );
-    }
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
+    _usernameFocusNode.dispose();
+    _passwordFocusNode.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
+    _animationController.dispose();
+    _emailValidationTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _validateEmail(String email) async {
+    // Cancel any previous validation timer
+    _emailValidationTimer?.cancel();
+
+    // Clear previous validation state
+    setState(() {
+      _isValidatingEmail = false;
+      _isEmailValid = false;
+      _emailValidationMessage = '';
+    });
+
+    // Basic email format check first
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
+      setState(() {
+        _emailValidationMessage = 'Please enter a valid email format';
+      });
+      return;
+    }
+
+    // Start timer to validate after user stops typing (1 second delay)
+    _emailValidationTimer = Timer(Duration(seconds: 1), () async {
+      setState(() {
+        _isValidatingEmail = true;
+      });
+
+      final result = await EmailValidatorService.validateEmail(email);
+
+      setState(() {
+        _isValidatingEmail = false;
+        _isEmailValid = result['isValid'];
+        _emailValidationMessage = result['message'];
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final isKeyboardOpen = viewInsets.bottom > 0;
+
+    // Responsive calculations
+    final bool isSmallDevice = size.height < 600;
+    final bool isMobile = size.width < 600;
+    final bool isTablet = size.width >= 600 && size.width < 900;
+
+    // Adaptive sizing
+    final double horizontalPadding = isMobile ? 24.0 : (isTablet ? 48.0 : size.width * 0.15);
+    final double maxFormWidth = isMobile ? double.infinity : (isTablet ? 500.0 : 450.0);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/supbg2.jpg', // Update with your image path
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
+      resizeToAvoidBottomInset: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF000831),
+              Color(0xFF000000),
+              Color(0x4DFF5252),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          // Signup Box Overlay
-          Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
-              child: Container(
-                padding: EdgeInsets.all(20.0),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(
-                      0.6), // Darkened background for a professional look
-                  borderRadius: BorderRadius.circular(16),
+        ),
+        child: SafeArea(
+          child: CustomScrollView(
+            physics: ClampingScrollPhysics(),
+            slivers: [
+              // App Bar
+              SliverAppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                pinned: false,
+                leading: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                    size: isMobile ? 20 : 24,
+                  ),
+                  onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
                 ),
-                child: Form(
-                  key: _formKey,
+              ),
+
+              // Main Content
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Step In, Predict Better, Invest Smarter',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 20),
+                      // Flexible spacer for top
+                      if (!isKeyboardOpen && !isSmallDevice)
+                        Flexible(flex: 1, child: SizedBox()),
 
-                      // Username label and field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Email',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                          SizedBox(height: 4),
-                          TextFormField(
-                            controller: _usernameController,
-                            focusNode: _emailFocusNode,
-                            textInputAction: TextInputAction.next,
-                            onFieldSubmitted: (_) {
-                              FocusScope.of(context)
-                                  .requestFocus(_passwordFocusNode);
-                            },
-                            decoration: InputDecoration(
-                              hintText: '',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(
-                                  0.2), // Muted white with transparency
-                            ),
-                            keyboardType: TextInputType.emailAddress,
-                            style: TextStyle(color: Colors.white),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
-                              } else if (!RegExp(
-                                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-                                  .hasMatch(value)) {
-                                return 'Enter a valid email';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-
-                      // Password label and field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Password',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                          SizedBox(height: 4),
-                          TextFormField(
-                            controller: _passwordController,
-                            focusNode: _passwordFocusNode,
-                            obscureText: _isObscure,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) {
-                              _register();
-                            },
-                            decoration: InputDecoration(
-                              hintText: '',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.2),
-                              suffixIcon: IconButton(
-                                icon: FaIcon(
-                                  _isObscure
-                                      ? FontAwesomeIcons.eyeSlash
-                                      : FontAwesomeIcons.eye,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isObscure = !_isObscure;
-                                  });
-                                },
-                              ),
-                            ),
-                            style: TextStyle(color: Colors.white),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              } else if (value.length < 6) {
-                                return 'Password must be at least 6 characters long';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-
-                      // Sign Up button with hover effect
-                      MouseRegion(
-                        onEnter: (_) {
-                          setState(() {
-                            _isHovered = true;
-                          });
-                        },
-                        onExit: (_) {
-                          setState(() {
-                            _isHovered = false;
-                          });
-                        },
-                        child: SizedBox(
-                          width: screenWidth * 0.6,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _register,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isHovered
-                                  ? Colors.red
-                                  : Colors.blueGrey, // Change color on hover
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16.0),
-                              child: _isLoading
-                                  ? CircularProgressIndicator(
-                                      color: Colors.white)
-                                  : Text(
-                                      'Sign Up',
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          color: _isHovered
-                                              ? Colors.black
-                                              : Colors
-                                                  .white), // Change text color on hover
+                      // Logo/Brand Section
+                      if (!isKeyboardOpen)
+                        FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: isSmallDevice ? 60 : 80,
+                                height: isSmallDevice ? 60 : 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [Colors.redAccent, Colors.orangeAccent],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.redAccent.withOpacity(0.3),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
                                     ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.account_balance_wallet,
+                                  color: Colors.white,
+                                  size: isSmallDevice ? 30 : 40,
+                                ),
+                              ),
+                              SizedBox(height: isSmallDevice ? 16 : 24),
+                              Text(
+                                "Sign Up",
+                                style: TextStyle(
+                                  fontSize: isSmallDevice ? 24 : 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "Step In, Predict Better, Invest Smarter",
+                                style: TextStyle(
+                                  fontSize: isSmallDevice ? 14 : 16,
+                                  color: Colors.white70,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      SizedBox(height: isKeyboardOpen ? 20 : (isSmallDevice ? 24 : 40)),
+
+                      // Form Container
+                      Container(
+                        constraints: BoxConstraints(maxWidth: maxFormWidth),
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Container(
+                            padding: EdgeInsets.all(isMobile ? 20 : 32),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.1),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 20,
+                                  offset: Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Email Field
+                                  _buildTextField(
+                                    controller: _usernameController,
+                                    focusNode: _usernameFocusNode,
+                                    label: 'Email',
+                                    icon: Icons.email_outlined,
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your email';
+                                      }
+                                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                        return 'Please enter a valid email';
+                                      }
+                                      return null;
+                                    },
+                                    onFieldSubmitted: (_) {
+                                      FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                    },
+                                    onChanged: _validateEmail,
+                                    suffixIcon: _isValidatingEmail ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white54),
+                                      ),
+                                    ) : _usernameController.text.isNotEmpty ? Icon(
+                                      _isEmailValid ? Icons.check_circle : Icons.error,
+                                      color: _isEmailValid ? Colors.green : Colors.red,
+                                    ) : null,
+                                  ),
+
+                                  if (_emailValidationMessage.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 5),
+                                      child: Text(
+                                        _emailValidationMessage,
+                                        style: TextStyle(
+                                          color: _isEmailValid ? Colors.green : Colors.red,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+
+                                  SizedBox(height: 16),
+
+                                  // Password Field
+                                  _buildTextField(
+                                    controller: _passwordController,
+                                    focusNode: _passwordFocusNode,
+                                    label: 'Password',
+                                    icon: Icons.lock_outline,
+                                    obscureText: _isObscure,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your password';
+                                      }
+                                      if (value.length < 6) {
+                                        return 'Password must be at least 6 characters';
+                                      }
+                                      return null;
+                                    },
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _isObscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                        color: Colors.white54,
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _isObscure = !_isObscure;
+                                        });
+                                      },
+                                    ),
+                                    onFieldSubmitted: (_) => _handleRegister(),
+                                  ),
+
+                                  SizedBox(height: 24),
+
+                                  // Sign Up Button
+                                  AnimatedContainer(
+                                    duration: Duration(milliseconds: 300),
+                                    height: isMobile ? 48 : 56,
+                                    child: _isLoading
+                                        ? Center(
+                                            child: CircularProgressIndicator(
+                                              color: Colors.redAccent,
+                                              strokeWidth: 3,
+                                            ),
+                                          )
+                                        : ElevatedButton(
+                                            onPressed: _handleRegister,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.redAccent,
+                                              foregroundColor: Colors.white,
+                                              elevation: 5,
+                                              shadowColor: Colors.redAccent.withOpacity(0.5),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'Sign Up',
+                                              style: TextStyle(
+                                                fontSize: isSmallDevice ? 16 : 18,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                  ),
+
+                                  // Error Message
+                                  if (_message.isNotEmpty)
+                                    Container(
+                                      margin: EdgeInsets.only(top: 16),
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                      ),
+                                      child: Text(
+                                        _message,
+                                        style: TextStyle(
+                                          color: Colors.redAccent,
+                                          fontSize: isSmallDevice ? 12 : 14,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
+
+                      SizedBox(height: 20),
+
+                      // Sign In Link
+                      FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Already have an account? ",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: isSmallDevice ? 13 : 15,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                "Sign In",
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isSmallDevice ? 13 : 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Bottom spacer
+                      if (!isKeyboardOpen)
+                        Flexible(flex: 1, child: SizedBox(height: 20)),
                     ],
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    void Function(String)? onFieldSubmitted,
+    void Function(String)? onChanged,
+  }) {
+    final isSmallDevice = MediaQuery.of(context).size.height < 600;
+
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: isSmallDevice ? 14 : 16,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: Colors.white70,
+          fontSize: isSmallDevice ? 13 : 15,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: Colors.white54,
+          size: 20,
+        ),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.08),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.redAccent,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.red,
+            width: 1,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.red,
+            width: 2,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: isSmallDevice ? 12 : 16,
+        ),
+        errorStyle: TextStyle(
+          fontSize: isSmallDevice ? 11 : 12,
+        ),
+      ),
+      validator: validator,
+      onFieldSubmitted: onFieldSubmitted,
+      onChanged: onChanged,
+    );
+  }
+
+  void _handleRegister() {
+    if (_formKey.currentState!.validate()) {
+      _register();
+    }
+  }
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    // Check if email is valid before proceeding
+    if (!_isEmailValid) {
+      setState(() {
+        _message = 'Please enter a valid email address';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _message = '';
+    });
+
+    try {
+      final result = await _apiService.register(
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      setState(() {
+        _isLoading = false;
+        _message = result['message'] ?? '';
+      });
+
+      if (result['success'] == true) {
+        int serialId = result['serial_id'] ?? 0;
+        String name = result['name'] ?? '';
+
+        if (mounted) {
+          Provider.of<AuthProvider>(context, listen: false).setSerialId(serialId, name);
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_message)),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _message = 'An error occurred. Please try again.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_message)),
+      );
+    }
   }
 }

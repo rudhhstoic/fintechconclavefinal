@@ -1,4 +1,6 @@
-import 'dart:convert'; // For JSON decoding
+// Enhanced tax_calculate.dart - Removed rotation animation, improved layout, added responsiveness, refined styles for professional look
+
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -18,39 +20,22 @@ class TaxResultPage extends StatefulWidget {
   _TaxResultPageState createState() => _TaxResultPageState();
 }
 
-class _TaxResultPageState extends State<TaxResultPage>
-    with TickerProviderStateMixin {
-  late AnimationController _controller;
-  List<dynamic> mutualFunds = []; // List to store mutual fund schemes
+class _TaxResultPageState extends State<TaxResultPage> {
+  List<dynamic> mutualFunds = [];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: Duration(seconds: 2),
-      vsync: this,
-    )..forward();
-    fetchMutualFunds(); // Fetch mutual funds when the page loads
+    fetchMutualFunds();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // Function to fetch mutual fund data from the API
   Future<void> fetchMutualFunds() async {
     try {
-      final response =
-          await http.get(Uri.parse('http://127.0.0.1:5000/mutualfunds'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5000/mutualfunds'));
       if (response.statusCode == 200) {
         List<dynamic> fundsData = json.decode(response.body);
         setState(() {
-          mutualFunds = fundsData
-              .where((fund) => fund['category']['sub'] == 'ELSS')
-              .take(3)
-              .toList();
+          mutualFunds = fundsData.where((fund) => fund['category']['sub'] == 'ELSS').take(3).toList();
         });
       } else {
         print('Failed to load mutual funds');
@@ -62,226 +47,225 @@ class _TaxResultPageState extends State<TaxResultPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isWideScreen = screenSize.width > 600;
+    final padding = isWideScreen ? 32.0 : 16.0;
+    final cardRadius = BorderRadius.circular(20.0);
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
-          'Tax Calculator',
+          'Tax Results',
           style: TextStyle(
             fontFamily: 'Lobster',
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color.fromARGB(255, 0, 12, 80), Colors.transparent],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen
-          },
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            colors: [Colors.blue.shade800, Colors.white],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        padding: EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RotationTransition(
-                turns: Tween(begin: 0.0, end: 1.0).animate(_controller),
-                child: Card(
-                  color: Colors.white,
-                  elevation: 4,
-                  margin: EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Container(
-                    padding: EdgeInsets.all(16.0),
-                    constraints: BoxConstraints(
-                      minWidth: double.infinity,
-                      minHeight: 200,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tax Calculation Summary',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF333333),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Actual Tax: ₹${widget.actualTax.toStringAsFixed(2)}',
-                          style:
-                              TextStyle(fontSize: 16, color: Color(0xFF333333)),
-                        ),
-                        Text(
-                          'Total Deductions: ₹${widget.totalDeductions.toStringAsFixed(2)}',
-                          style:
-                              TextStyle(fontSize: 16, color: Color(0xFF333333)),
-                        ),
-                        Text(
-                          'Tax After Deductions: ₹${widget.taxAfterDeductions.toStringAsFixed(2)}',
-                          style:
-                              TextStyle(fontSize: 16, color: Color(0xFF333333)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildSummaryCard(screenSize, padding, cardRadius),
+                  SizedBox(height: padding),
+                  _buildChartCard(screenSize, padding, cardRadius),
+                  if (mutualFunds.isNotEmpty) ...[
+                    SizedBox(height: padding),
+                    _buildRecommendationsSection(screenSize, padding, cardRadius),
+                  ],
+                ],
               ),
-              SizedBox(height: 20),
-              Card(
-                color: Colors.white,
-                elevation: 4,
-                margin: EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tax vs Deductions',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      SfCartesianChart(
-                        primaryXAxis: CategoryAxis(),
-                        series: <CartesianSeries>[
-                          ColumnSeries<_TaxData, String>(
-                            dataSource: [
-                              _TaxData('Actual Tax', widget.actualTax),
-                              _TaxData('Deductions', widget.totalDeductions),
-                              _TaxData('Tax After Deductions',
-                                  widget.taxAfterDeductions),
-                            ],
-                            xValueMapper: (_TaxData data, _) => data.label,
-                            yValueMapper: (_TaxData data, _) => data.amount,
-                            dataLabelSettings:
-                                DataLabelSettings(isVisible: true),
-                            pointColorMapper: (_TaxData data, index) {
-                              if (index == 0) return Colors.red;
-                              if (index == 1) return Colors.yellow;
-                              return Colors.blue;
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Display mutual fund recommendations
-              if (mutualFunds.isNotEmpty) ...[
-                SizedBox(height: 20),
-                Text(
-                  'Recommended Mutual Fund Schemes',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: mutualFunds.length,
-                  itemBuilder: (context, index) {
-                    final fund = mutualFunds[index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      color: Color.fromARGB(255, 244, 244, 252),
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              fund['name'],
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              fund['category']['main'],
-                              style:
-                                  TextStyle(fontSize: 14, color: Colors.blue),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              fund['category']['sub'],
-                              style:
-                                  TextStyle(fontSize: 14, color: Colors.orange),
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  children: [
-                                    Text('1M'),
-                                    Icon(Icons.arrow_upward,
-                                        color: Colors.green, size: 16),
-                                    Text('${fund['return_1_month']}%'),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Text('3M'),
-                                    Icon(Icons.arrow_upward,
-                                        color: Colors.green, size: 16),
-                                    Text('${fund['return_3_month']}%'),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Text('6M'),
-                                    Icon(Icons.arrow_upward,
-                                        color: Colors.green, size: 16),
-                                    Text('${fund['return_6_month']}%'),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Text('1Y'),
-                                    Icon(Icons.arrow_upward,
-                                        color: Colors.green, size: 16),
-                                    Text('${fund['return_per_annum']}%'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSummaryCard(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Card(
+      elevation: 12,
+      shape: RoundedRectangleBorder(borderRadius: cardRadius),
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tax Summary',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+            ),
+            SizedBox(height: padding / 2),
+            Divider(color: Colors.blue.shade100),
+            SizedBox(height: padding / 2),
+            _buildSummaryItem('Actual Tax', widget.actualTax),
+            _buildSummaryItem('Total Deductions', widget.totalDeductions),
+            _buildSummaryItem('Tax After Deductions', widget.taxAfterDeductions, isHighlight: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(String label, double value, {bool isHighlight = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 18, color: Colors.grey.shade800)),
+          Text(
+            '₹${value.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
+              color: isHighlight ? Colors.blue.shade900 : Colors.grey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartCard(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Card(
+      elevation: 12,
+      shape: RoundedRectangleBorder(borderRadius: cardRadius),
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tax Breakdown',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+            ),
+            SizedBox(height: padding),
+            SizedBox(
+              height: screenSize.height * 0.35,
+              child: SfCartesianChart(
+                primaryXAxis: CategoryAxis(
+                  majorGridLines: MajorGridLines(width: 0),
+                  labelStyle: TextStyle(color: Colors.grey.shade600),
+                ),
+                primaryYAxis: NumericAxis(
+                  labelFormat: '{value}',
+                  majorGridLines: MajorGridLines(color: Colors.grey.shade200),
+                ),
+                tooltipBehavior: TooltipBehavior(enable: true),
+                series: <CartesianSeries>[
+                  BarSeries<_TaxData, String>(
+                    dataSource: [
+                      _TaxData('Actual Tax', widget.actualTax),
+                      _TaxData('Deductions', widget.totalDeductions),
+                      _TaxData('Final Tax', widget.taxAfterDeductions),
+                    ],
+                    xValueMapper: (_TaxData data, _) => data.label,
+                    yValueMapper: (_TaxData data, _) => data.amount,
+                    dataLabelSettings: DataLabelSettings(isVisible: true, textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                    pointColorMapper: (_TaxData data, index) {
+                      return [Colors.redAccent, Colors.amberAccent, Colors.greenAccent][index];
+                    },
+                    borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsSection(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Investment Recommendations',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+        ),
+        SizedBox(height: padding / 2),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: mutualFunds.length,
+          itemBuilder: (context, index) {
+            final fund = mutualFunds[index];
+            return Card(
+              elevation: 6,
+              margin: EdgeInsets.only(bottom: padding / 2),
+              shape: RoundedRectangleBorder(borderRadius: cardRadius),
+              child: ExpansionTile(
+                title: Text(
+                  fund['name'],
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green.shade800),
+                ),
+                subtitle: Text(
+                  '${fund['category']['main']} - ${fund['category']['sub']}',
+                  style: TextStyle(color: Colors.blue.shade600),
+                ),
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(padding / 2),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildReturnChip('1M', fund['return_1_month']),
+                        _buildReturnChip('3M', fund['return_3_month']),
+                        _buildReturnChip('6M', fund['return_6_month']),
+                        _buildReturnChip('1Y', fund['return_per_annum']),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReturnChip(String label, dynamic value) {
+    final double parsed = double.tryParse(value.toString()) ?? 0.0;
+    return Chip(
+      label: Column(
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          Text('${parsed.toStringAsFixed(1)}%', style: TextStyle(color: parsed > 0 ? Colors.green : Colors.red)),
+        ],
+      ),
+      backgroundColor: Colors.grey.shade100,
     );
   }
 }

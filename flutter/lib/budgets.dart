@@ -172,7 +172,7 @@ class _BudgetPageState extends State<BudgetPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Limit: ₹${budget['limit']}"),
+                          Text("Limit: ₹${budget['budget_limit']}"),
                           Text("Spent: ₹${budget['spent']}"),
                           Text("Remaining: ₹${budget['remaining']}"),
                         ],

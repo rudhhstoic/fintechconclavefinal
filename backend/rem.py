@@ -14,8 +14,8 @@ db = SQLAlchemy(app)
 CORS(app)
 
 # Twilio configuration
-account_sid = 'AC530541f75b7d8a1949c5bd148ac63b43'  # Replace with your Twilio Account SID
-auth_token = '645ca657c411d658f9a6116d0012eb11'      # Replace with your Twilio Auth Token
+account_sid = 'ACc4d98c59cb9035467810af9b427704f7'  # Replace with your Twilio Account SID
+auth_token = '64b75198565a9d6f673117f5fc3d627e'      # Replace with your Twilio Auth Token
 twilio_whatsapp_number = 'whatsapp:+14155238886'     # Twilio's WhatsApp sandbox number
 client = Client(account_sid, auth_token)
 

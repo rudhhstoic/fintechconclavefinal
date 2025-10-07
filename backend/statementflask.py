@@ -41,5 +41,5 @@ def upload_file():
 
     return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data, average_total_credit=average_total_credit) # if monthly analysis too needed give--> return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data)
 
-#if __name__ == '__main__':
-#    app.run(debug=True, host='0.0.0.0', port = 5001)
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port = 5001)

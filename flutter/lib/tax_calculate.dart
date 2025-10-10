@@ -31,7 +31,7 @@ class _TaxResultPageState extends State<TaxResultPage> {
 
   Future<void> fetchMutualFunds() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:5000/mutualfunds'));
+      final response = await http.get(Uri.parse('http://192.168.231.10:5000/mutualfunds'));
       if (response.statusCode == 200) {
         List<dynamic> fundsData = json.decode(response.body);
         setState(() {

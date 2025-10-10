@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'auth_provider.dart';
 
-//..........................................................
 void main() {
   runApp(MyApp());
 }
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: UploadPage(), // Replace 123 with the actual serialId
+      home: UploadPage(),
     );
   }
 }
@@ -46,12 +45,11 @@ class UploadPageState extends State<UploadPage> {
     "Axis",
     "HDFC",
     "Others"
-  ]; // Bank options
+  ];
 
   Future<void> fetchMutualFunds() async {
     try {
-      final response = await http.get(Uri.parse(
-          'http://127.0.0.1:5000/mutualfunds')); // Replace with the correct endpoint
+      final response = await http.get(Uri.parse('http://192.168.231.10:5000/mutualfunds'));
       if (response.statusCode == 200) {
         List<dynamic> fundsData = json.decode(response.body);
         setState(() {
@@ -94,26 +92,32 @@ class UploadPageState extends State<UploadPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:5000/upload'), // Replace with Flask IP
+        Uri.parse('http://192.168.231.10:5000/upload'),
       );
 
       request.fields['text'] = selectedBank!;
-      request.files.add(http.MultipartFile.fromBytes(
-        'file',
-        file.bytes!,
-        filename: file.name,
-      ));
+      if (file.bytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          file.bytes!,
+          filename: file.name,
+        ));
+      } else if (file.path != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'file',
+          file.path!,
+        ));
+      } else {
+        throw Exception("No valid file data found.");
+      }
 
       var response = await request.send();
       if (response.statusCode == 200) {
         String responseString = await response.stream.bytesToString();
-
         var jsonResponse = json.decode(responseString);
 
-        // Parse chart data and recommendation message
         List<dynamic> dataResponse = jsonResponse['data'] ?? [];
-        recommendMessage =
-            jsonResponse['recommend_message'] ?? 'No recommendation available';
+        recommendMessage = jsonResponse['recommend_message'] ?? 'No recommendation available';
 
         setState(() {
           chartData = dataResponse.map((data) {
@@ -124,10 +128,8 @@ class UploadPageState extends State<UploadPage> {
           }).toList();
         });
         await fetchMutualFunds();
-        // Calculate total credit based on chart data (last balance)
-        double totalCredit = jsonResponse['average_total_credit'] ?? 0.0;
 
-        // Fetch budget recommendations using the calculated totalCredit
+        double totalCredit = jsonResponse['average_total_credit'] ?? 0.0;
         await fetchBudgetRecommendations(totalCredit);
       }
     } finally {
@@ -137,7 +139,6 @@ class UploadPageState extends State<UploadPage> {
     }
   }
 
-  // Method to fetch budget recommendations
   Future<void> fetchBudgetRecommendations(double totalCredit) async {
     setState(() {
       _isLoading = true;
@@ -147,7 +148,7 @@ class UploadPageState extends State<UploadPage> {
       final int totalCreditInt = totalCredit.toInt();
       print(totalCreditInt);
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/recommend_budgets/$totalCreditInt'),
+        Uri.parse('http://192.168.231.10:5000/recommend_budgets/$totalCreditInt'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -167,14 +168,11 @@ class UploadPageState extends State<UploadPage> {
     }
   }
 
-  // Method to add a budget
   Future<void> addBudget(String category, double limit) async {
-    final serialId =
-        Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
+    final serialId = Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     try {
       final response = await http.post(
-        Uri.parse(
-            'http://127.0.0.1:5000/add_budget/$serialId'), // Replace '1' with the actual user ID
+        Uri.parse('http://192.168.231.10:5000/add_budget/$serialId'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'category': category,
@@ -184,11 +182,11 @@ class UploadPageState extends State<UploadPage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          // Remove the added budget from the list of recommendations
           recommendations.removeWhere((rec) => rec['category'] == category);
         });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Budget added successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Budget added successfully'))
+        );
       } else {
         print('Failed to add budget');
       }
@@ -204,313 +202,391 @@ class UploadPageState extends State<UploadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isWideScreen = screenSize.width > 600;
+    final padding = isWideScreen ? 32.0 : 16.0;
+    final cardRadius = BorderRadius.circular(20.0);
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           'Statement Analyser',
           style: TextStyle(
             fontFamily: 'Lobster',
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color.fromARGB(255, 0, 12, 80), Colors.transparent],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
         ),
         actions: [
           IconButton(
             icon: const CircleAvatar(
-              radius: 18, // Adjust size
-              backgroundImage: AssetImage('assets/avatar.png'), // Asset image
+              radius: 18,
+              backgroundImage: AssetImage('assets/avatar.png'),
             ),
             onPressed: () {
-              // Navigate to personal information screen
               Navigator.pushNamed(context, '/personalinfo');
             },
           ),
         ],
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Set the color of the back button to white
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue, Colors.white], // Gradient colors
-            begin: Alignment.topLeft, // Gradient starting point
-            end: Alignment.bottomRight, // Gradient ending point
+            colors: [Colors.blue.shade800, Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
+        child: SafeArea(
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 10), // Adds spacing around the box
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 0), // Internal padding
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Colors.blue,
-                        width: 2), // Blue border with a width of 2
-                    borderRadius: BorderRadius.circular(8), // Rounded corners
-                  ),
-
-                  // Dropdown for Bank Selection
-                  child: DropdownButtonHideUnderline(
-                    // Opening for DropdownButtonHideUnderline
-                    child: DropdownButton<String>(
-                      hint: Text("Select Bank"),
-                      value: selectedBank,
-                      items: banks.map((String bank) {
-                        return DropdownMenuItem<String>(
-                          value: bank,
-                          child: Text(bank),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedBank = value;
-                        });
-                      },
-                      icon: const Icon(Icons.arrow_drop_down,
-                          color: Colors.black),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                ElevatedButton(
-                  onPressed: _isLoading ? null : uploadFile,
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Upload DOCX File'),
-                ),
-                const SizedBox(height: 20),
-                const Text('Balance Over Time'),
-                const SizedBox(height: 10),
-                SizedBox(
-                  child: chartData.isEmpty
-                      ? const Text('No data yet.')
-                      : SfCartesianChart(
-                          primaryXAxis: DateTimeAxis(
-                            title: AxisTitle(text: 'Date'),
-                            intervalType: DateTimeIntervalType.months,
-                            dateFormat: DateFormat('dd MMM yyyy'),
-                          ),
-                          primaryYAxis: NumericAxis(
-                            title: AxisTitle(text: 'Balance'),
-                            numberFormat: NumberFormat.currency(symbol: '₹'),
-                          ),
-                          tooltipBehavior: TooltipBehavior(enable: true),
-                          series: <CartesianSeries>[
-                            LineSeries<ChartData, DateTime>(
-                              dataSource: chartData,
-                              xValueMapper: (ChartData data, _) => data.date,
-                              yValueMapper: (ChartData data, _) => data.balance,
-                              markerSettings:
-                                  const MarkerSettings(isVisible: true),
-                              color: const Color.fromARGB(255, 0, 17, 63),
-                              width: 2,
-                            ),
-                          ],
-                        ),
-                ),
-                const SizedBox(height: 20),
-                // Display the recommendation message
-                Text(
-                  recommendMessage,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20), // First empty line
-                if (mutualFunds.isNotEmpty) ...[
-                  const Text(
-                    'Recommended Schemes ',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: mutualFunds.length,
-                    itemBuilder: (context, index) {
-                      final fund = mutualFunds[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 16),
-                        color: const Color.fromARGB(
-                            249, 253, 247, 232), // Light background color
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                fund['name'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                fund['category']['main'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                fund['category']['sub'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.orange,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    children: [
-                                      const Text('1M'),
-                                      Icon(
-                                        Icons.arrow_upward,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      Text(
-                                        '${fund['return_1_month']}%',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      const Text('3M'),
-                                      Icon(
-                                        Icons.arrow_upward,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      Text(
-                                        '${fund['return_3_month']}%',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      const Text('6M'),
-                                      Icon(
-                                        Icons.arrow_upward,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      Text(
-                                        '${fund['return_6_month']}%',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      const Text('1Y'),
-                                      Icon(
-                                        Icons.arrow_upward,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      Text(
-                                        '${fund['return_per_annum']}%',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildUploadSection(screenSize, padding, cardRadius),
+                  if (chartData.isNotEmpty) ...[
+                    SizedBox(height: padding),
+                    _buildChartCard(screenSize, padding, cardRadius),
+                  ],
+                  if (recommendMessage.isNotEmpty && chartData.isNotEmpty) ...[
+                    SizedBox(height: padding),
+                    _buildRecommendationMessage(padding, cardRadius),
+                  ],
+                  if (mutualFunds.isNotEmpty) ...[
+                    SizedBox(height: padding),
+                    _buildMutualFundsSection(screenSize, padding, cardRadius),
+                  ],
+                  if (recommendations.isNotEmpty) ...[
+                    SizedBox(height: padding),
+                    _buildBudgetRecommendationsSection(screenSize, padding, cardRadius),
+                  ],
                 ],
-                const SizedBox(height: 20),
-                if (recommendations.isNotEmpty) ...[
-                  const Text(
-                    'Budget Recommendations ',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: recommendations.length,
-                    itemBuilder: (context, index) {
-                      final recommendation = recommendations[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 16),
-                        color: const Color.fromARGB(249, 253, 247, 232),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                recommendation['category'],
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              Text(
-                                '₹${recommendation['recommended_limit']}',
-                                style: const TextStyle(
-                                    fontSize: 16, color: Colors.blue),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () {
-                                  addBudget(recommendation['category'],
-                                      recommendation['recommended_limit']);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.blue.shade800,
         onPressed: () {
-          Navigator.pushNamed(context, '/botpopup'); // Navigate to chatbot
+          Navigator.pushNamed(context, '/botpopup');
         },
         tooltip: 'Chatbot',
         child: const Icon(Icons.chat, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildUploadSection(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Card(
+      elevation: 12,
+      shape: RoundedRectangleBorder(borderRadius: cardRadius),
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Upload Bank Statement',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+            ),
+            SizedBox(height: padding / 2),
+            Divider(color: Colors.blue.shade100),
+            SizedBox(height: padding / 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.blue.shade300, width: 2),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  hint: Text("Select Bank", style: TextStyle(color: Colors.grey.shade700)),
+                  value: selectedBank,
+                  isExpanded: true,
+                  items: banks.map((String bank) {
+                    return DropdownMenuItem<String>(
+                      value: bank,
+                      child: Text(bank, style: TextStyle(fontSize: 16)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedBank = value;
+                    });
+                  },
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.blue.shade800),
+                ),
+              ),
+            ),
+            SizedBox(height: padding),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : uploadFile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade800,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 4,
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Upload DOCX File',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartCard(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Card(
+      elevation: 12,
+      shape: RoundedRectangleBorder(borderRadius: cardRadius),
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Balance Over Time',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+            ),
+            SizedBox(height: padding),
+            SizedBox(
+              height: screenSize.height * 0.35,
+              child: SfCartesianChart(
+                primaryXAxis: DateTimeAxis(
+                  title: AxisTitle(
+                    text: 'Date',
+                    textStyle: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.bold),
+                  ),
+                  intervalType: DateTimeIntervalType.months,
+                  dateFormat: DateFormat('dd MMM'),
+                  majorGridLines: MajorGridLines(width: 0),
+                  labelStyle: TextStyle(color: Colors.grey.shade600),
+                ),
+                primaryYAxis: NumericAxis(
+                  title: AxisTitle(
+                    text: 'Balance',
+                    textStyle: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.bold),
+                  ),
+                  numberFormat: NumberFormat.currency(symbol: '₹'),
+                  majorGridLines: MajorGridLines(color: Colors.grey.shade200),
+                  labelStyle: TextStyle(fontSize: 0),
+                  isVisible: true,
+                ),
+                tooltipBehavior: TooltipBehavior(enable: true),
+                series: <CartesianSeries>[
+                  LineSeries<ChartData, DateTime>(
+                    dataSource: chartData,
+                    xValueMapper: (ChartData data, _) => data.date,
+                    yValueMapper: (ChartData data, _) => data.balance,
+                    markerSettings: MarkerSettings(
+                      isVisible: true,
+                      color: Colors.blue.shade800,
+                      borderColor: Colors.white,
+                      borderWidth: 2,
+                      height: 8,
+                      width: 8,
+                    ),
+                    color: Colors.blue.shade800,
+                    width: 3,
+                    dataLabelSettings: DataLabelSettings(
+                      isVisible: false,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationMessage(double padding, BorderRadius cardRadius) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: cardRadius),
+      color: Colors.blue.shade50,
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Row(
+          children: [
+            Icon(Icons.lightbulb, color: Colors.amber.shade700, size: 32),
+            SizedBox(width: padding / 2),
+            Expanded(
+              child: Text(
+                recommendMessage,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMutualFundsSection(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Investment Recommendations',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+        ),
+        SizedBox(height: padding / 2),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: mutualFunds.length,
+          itemBuilder: (context, index) {
+            final fund = mutualFunds[index];
+            return Card(
+              elevation: 6,
+              margin: EdgeInsets.only(bottom: padding / 2),
+              shape: RoundedRectangleBorder(borderRadius: cardRadius),
+              child: ExpansionTile(
+                title: Text(
+                  fund['name'],
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green.shade800),
+                ),
+                subtitle: Text(
+                  '${fund['category']['main']} - ${fund['category']['sub']}',
+                  style: TextStyle(color: Colors.blue.shade600),
+                ),
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(padding / 2),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildReturnChip('1M', fund['return_1_month']),
+                        _buildReturnChip('3M', fund['return_3_month']),
+                        _buildReturnChip('6M', fund['return_6_month']),
+                        _buildReturnChip('1Y', fund['return_per_annum']),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReturnChip(String label, dynamic value) {
+    final double parsed = double.tryParse(value.toString()) ?? 0.0;
+    return Chip(
+      label: Column(
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            '${parsed.toStringAsFixed(1)}%',
+            style: TextStyle(
+              color: parsed > 0 ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.grey.shade100,
+    );
+  }
+
+  Widget _buildBudgetRecommendationsSection(Size screenSize, double padding, BorderRadius cardRadius) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Budget Recommendations',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+        ),
+        SizedBox(height: padding / 2),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: recommendations.length,
+          itemBuilder: (context, index) {
+            final recommendation = recommendations[index];
+            return Card(
+              elevation: 6,
+              margin: EdgeInsets.only(bottom: padding / 2),
+              shape: RoundedRectangleBorder(borderRadius: cardRadius),
+              child: ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: padding, vertical: padding / 2),
+                title: Text(
+                  recommendation['category'],
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                ),
+                subtitle: Text(
+                  'Recommended Limit',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '₹${recommendation['recommended_limit']}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade800,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(Icons.add_circle, color: Colors.blue.shade800, size: 32),
+                      onPressed: () {
+                        addBudget(
+                          recommendation['category'],
+                          recommendation['recommended_limit'],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

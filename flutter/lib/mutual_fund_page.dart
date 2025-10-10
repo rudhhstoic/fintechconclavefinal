@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'mutual_fund_service.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // For using icons
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MutualFund {
   final String name;
-  final String categoryMain; // Main category like "EQUITY"
-  final String categorySub; // Subcategory like "SMALL CAP"
+  final String categoryMain;
+  final String categorySub;
   final String amc;
   final String currentValue;
   final String returnPerAnnum;
@@ -36,10 +36,9 @@ class MutualFund {
       categorySub: json['category']['sub'],
       amc: json['amc'],
       currentValue: json['current_value'],
-      return1Month:
-          json['return_1_month'], // Ensure this matches the backend JSON key
-      return3Months: json['return_3_month'], // Same here
-      return6Months: json['return_6_month'], // And here
+      return1Month: json['return_1_month'],
+      return3Months: json['return_3_month'],
+      return6Months: json['return_6_month'],
       returnPerAnnum: json['return_per_annum'],
       expenseRatio: json['expense_ratio'],
       age: json['age'],
@@ -130,289 +129,313 @@ class _MutualFundPageState extends State<MutualFundPage> {
     });
   }
 
-  Widget buildReturnRow(String return1Month, String return3Months,
-      String return6Months, String returnPerAnnum) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildReturnColumn('1M', return1Month),
-        _buildReturnColumn('3M', return3Months),
-        _buildReturnColumn('6M', return6Months),
-        _buildReturnColumn('1Y', returnPerAnnum),
-      ],
-    );
-  }
-
-  Widget _buildReturnColumn(String label, String returnValue) {
-    final double returnPercent = double.tryParse(returnValue) ?? 0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        Row(
-          children: [
-            Icon(
-              returnPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-              color: returnPercent >= 0 ? Colors.green : Colors.red,
-              size: 16,
-            ),
-            Text(
-              "$returnValue%",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isWideScreen = screenSize.width > 600;
+    final padding = isWideScreen ? 32.0 : 16.0;
+    final cardRadius = BorderRadius.circular(20.0);
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 0, 12, 80),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           'Mutual Funds',
           style: TextStyle(
             fontFamily: 'Lobster',
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color.fromARGB(255, 0, 12, 80), Colors.transparent],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen
-          },
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue, Colors.white], // Blue to white gradient
+            colors: [Colors.blue.shade800, Colors.white],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Choose it based on your need',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w600),
-                        textAlign: TextAlign.left,
-                      ),
-                      SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: selectedCategoryMain.isEmpty
-                                  ? null
-                                  : selectedCategoryMain,
-                              items: ['EQUITY', 'DEBT', 'TAX SAVER', 'HYBRID']
-                                  .map((type) => DropdownMenuItem(
-                                        value: type,
-                                        child: Text(type),
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                toggleFilter('category', value ?? '');
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Category',
-                                prefixIcon: Icon(Icons.category),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildFilterCard(padding, cardRadius),
+              Expanded(
+                child: FutureBuilder<List<MutualFund>>(
+                  future: futureFunds,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade800),
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          "Error: ${snapshot.error}",
+                          style: TextStyle(color: Colors.red.shade800, fontSize: 16),
+                        ),
+                      );
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "No data available",
+                          style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                        ),
+                      );
+                    } else {
+                      return SingleChildScrollView(
+                        child: Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Available Funds',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade900,
                                 ),
                               ),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: selectedInvestmentPeriod.isEmpty
-                                  ? null
-                                  : selectedInvestmentPeriod,
-                              items:
-                                  ['1 month', '3 months', '6 months', '1 year']
-                                      .map((period) => DropdownMenuItem(
-                                            value: period,
-                                            child: Text(period),
-                                          ))
-                                      .toList(),
-                              onChanged: (value) {
-                                toggleFilter('investmentPeriod', value ?? '');
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Investment Period',
-                                prefixIcon: Icon(Icons.access_time),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                              SizedBox(height: padding / 2),
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: displayedFunds.length,
+                                itemBuilder: (context, index) {
+                                  final fund = displayedFunds[index];
+                                  return _buildFundCard(fund, padding, cardRadius);
+                                },
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: selectedFundSize.isEmpty
-                                  ? null
-                                  : selectedFundSize,
-                              items: [
-                                'SMALL',
-                                'MID',
-                                'LARGE',
-                                'ELSS',
-                              ]
-                                  .map((size) => DropdownMenuItem(
-                                        value: size,
-                                        child: Text(size),
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                toggleFilter('fundSize', value ?? '');
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Fund Size',
-                                prefixIcon: Icon(Icons.pie_chart_outline),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Icon(Icons.pie_chart,
-                              color: Colors
-                                  .white), // Bright icon for the fund size
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: FutureBuilder<List<MutualFund>>(
-                future: futureFunds,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text("Error: ${snapshot.error}"));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text("No data available"));
-                  } else {
-                    return ListView.builder(
-                      itemCount: displayedFunds.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == displayedFunds.length) {
-                          return TextButton(
-                            onPressed: showMoreFunds,
-                            child: Text(
-                              "Show ${fundsToShow < allFunds.length ? 'More' : 'All'} Funds",
-                              style: TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          );
-                        }
-
-                        final fund = displayedFunds[index];
-                        return Card(
-                          margin:
-                              EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          elevation: 2,
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            fund.name,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.green,
-                                            ),
-                                          ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            fund.categoryMain,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.blueAccent,
-                                            ),
-                                          ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            'Fund Size: ${fund.categorySub}',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.deepOrangeAccent,
-                                            ),
-                                          ),
-                                        ],
+                              if (fundsToShow < allFunds.length)
+                                Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: padding),
+                                    child: ElevatedButton(
+                                      onPressed: showMoreFunds,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue.shade800,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 32,
+                                          vertical: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        elevation: 4,
+                                      ),
+                                      child: Text(
+                                        'Show More Funds',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
-                                    SvgPicture.asset(
-                                      'assets/fund_icon.svg',
-                                      height: 50,
-                                      color: Colors.green,
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                SizedBox(height: 10),
-                                buildReturnRow(
-                                    fund.return1Month,
-                                    fund.return3Months,
-                                    fund.return6Months,
-                                    fund.returnPerAnnum),
-                              ],
-                            ),
+                            ],
                           ),
-                        );
-                      },
-                    );
-                  }
-                },
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterCard(double padding, BorderRadius cardRadius) {
+    return Padding(
+      padding: EdgeInsets.all(padding),
+      child: Card(
+        elevation: 12,
+        shape: RoundedRectangleBorder(borderRadius: cardRadius),
+        child: Padding(
+          padding: EdgeInsets.all(padding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Choose based on your need',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+              SizedBox(height: padding / 2),
+              Divider(color: Colors.blue.shade100),
+              SizedBox(height: padding / 2),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown(
+                      value: selectedCategoryMain.isEmpty ? null : selectedCategoryMain,
+                      items: ['EQUITY', 'DEBT', 'TAX SAVER', 'HYBRID'],
+                      label: 'Category',
+                      icon: Icons.category,
+                      onChanged: (value) => toggleFilter('category', value ?? ''),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: _buildDropdown(
+                      value: selectedInvestmentPeriod.isEmpty ? null : selectedInvestmentPeriod,
+                      items: ['1 month', '3 months', '6 months', '1 year'],
+                      label: 'Period',
+                      icon: Icons.access_time,
+                      onChanged: (value) => toggleFilter('investmentPeriod', value ?? ''),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12),
+              _buildDropdown(
+                value: selectedFundSize.isEmpty ? null : selectedFundSize,
+                items: ['SMALL', 'MID', 'LARGE', 'ELSS'],
+                label: 'Fund Size',
+                icon: Icons.pie_chart_outline,
+                onChanged: (value) => toggleFilter('fundSize', value ?? ''),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String? value,
+    required List<String> items,
+    required String label,
+    required IconData icon,
+    required Function(String?) onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue.shade300, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        items: items
+            .map((item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(item, style: TextStyle(fontSize: 14)),
+                ))
+            .toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.blue.shade800),
+          prefixIcon: Icon(icon, color: Colors.blue.shade800),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        dropdownColor: Colors.white,
+        icon: Icon(Icons.arrow_drop_down, color: Colors.blue.shade800),
+      ),
+    );
+  }
+
+  Widget _buildFundCard(MutualFund fund, double padding, BorderRadius cardRadius) {
+    return Card(
+      elevation: 6,
+      margin: EdgeInsets.only(bottom: padding / 2),
+      shape: RoundedRectangleBorder(borderRadius: cardRadius),
+      child: ExpansionTile(
+        title: Text(
+          fund.name,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.green.shade800,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 4),
+            Text(
+              fund.categoryMain,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.blue.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              'Fund Size: ${fund.categorySub}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.orange.shade700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
+        children: [
+          Padding(
+            padding: EdgeInsets.all(padding / 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildReturnChip('1M', fund.return1Month),
+                _buildReturnChip('3M', fund.return3Months),
+                _buildReturnChip('6M', fund.return6Months),
+                _buildReturnChip('1Y', fund.returnPerAnnum),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildReturnChip(String label, String value) {
+    final double parsed = double.tryParse(value) ?? 0.0;
+    return Chip(
+      label: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            '${parsed.toStringAsFixed(1)}%',
+            style: TextStyle(
+              color: parsed > 0 ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.grey.shade100,
     );
   }
 }

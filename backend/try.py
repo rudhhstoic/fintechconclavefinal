@@ -32,7 +32,7 @@ load_dotenv()
 
 # App Configuration
 app.config['SECRET_KEY'] = binascii.hexlify(os.urandom(24)).decode()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:anirudhh@localhost:5432/Archons'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Archana@localhost:5432/Archons'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 chatbot = FinanceChatbotModel(GEMINI_API_KEY)
 
 # Load budget recommendation model
-model = joblib.load(r'C:\Users\Lenovo\Desktop\fintech\FinTech\backend\models\budget_recommendation_model.pkl')
+model = joblib.load(r'D:\Project\fintechconclavefinal\backend\models\budget_recommendation_model.pkl')
 
 # Define Database Models
 class Customer(db.Model):
@@ -222,7 +222,7 @@ def get_db_connection():
             port="5432",
             database="Archons",
             user="postgres",
-            password="anirudhh"
+            password="Archana"
         )
         return conn
     except Exception as e:

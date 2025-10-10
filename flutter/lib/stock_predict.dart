@@ -76,7 +76,7 @@ class StockAnalysisPageState extends State<StockAnalysisPage> {
       _modelTrained = false;
     });
 
-    final url = Uri.parse('http://127.0.0.1:5000/analyse_stock');
+    final url = Uri.parse('http://192.168.231.10:5000/analyse_stock');
     final String startDateStr = getFormattedDate(_startDate!);
     final String endDateStr = getFormattedDate(_endDate!);
 

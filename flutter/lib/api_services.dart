@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = 'http://127.0.0.1:5000'; // Use your Flask HTTPS URL
+  final String baseUrl = 'http://192.168.231.10:5000'; // Use your Flask HTTPS URL
 
   // Register method
   Future<Map<String, dynamic>> register(

@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 class save_model:
     def __init__(self):
         # Sample dataset
-        data = pd.read_csv(r"D:\Project\fintechconclavefinal\backend\uploads\budgeting_data_processed.csv")
+        data = pd.read_csv(r"D:\fintechconclavefinal\backend\uploads\budgeting_data_processed.csv")
         self.df = pd.DataFrame(data)
 
         # Encoding categorical features

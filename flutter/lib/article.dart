@@ -61,7 +61,7 @@ class _FinanceHomePageState extends State<FinanceHomePage> {
       isLoading = true;
     });
 
-    final url = Uri.parse('http://192.168.231.10:5000/get_articles');
+    final url = Uri.parse('http://192.168.100.61:5000/get_articles');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

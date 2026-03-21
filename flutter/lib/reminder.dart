@@ -72,7 +72,7 @@ class HomeReminder extends StatelessWidget {
 }
 
 class ReminderService {
-  final String baseUrl = 'http://192.168.231.10:5000';
+  final String baseUrl = 'http://192.168.100.61:5000';
 
   Future<void> setReminder(
       int userId, String date, String description, String mobileno) async {

@@ -72,7 +72,7 @@ class _VacationPageState extends State<VacationPage> {
 
   Future<void> fetchSavedVacations() async {
     final response = await http.get(
-      Uri.parse('http://192.168.231.10:5000/get_vacations/${widget.serialId}'),
+      Uri.parse('http://192.168.100.61:5000/get_vacations/${widget.serialId}'),
     );
 
     if (response.statusCode == 200) {
@@ -86,7 +86,7 @@ class _VacationPageState extends State<VacationPage> {
 
   Future<void> getRecommendations() async {
     final response = await http.post(
-      Uri.parse('http://192.168.231.10:5000/recommend_vacation'),
+      Uri.parse('http://192.168.100.61:5000/recommend_vacation'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'serial_id': widget.serialId,
@@ -109,7 +109,7 @@ class _VacationPageState extends State<VacationPage> {
 
   Future<void> addVacation(Map vacation) async {
     final response = await http.post(
-      Uri.parse('http://192.168.231.10:5000/add_vacation'),
+      Uri.parse('http://192.168.100.61:5000/add_vacation'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(vacation),
     );

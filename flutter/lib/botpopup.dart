@@ -37,7 +37,7 @@ class ChatbotScreenState extends State<ChatbotScreen> {
       try {
         final response = await http.post(
           Uri.parse(
-              'http://192.168.231.10:5000/chatbot'), // Replace with your Flask backend URL
+              'http://192.168.100.61:5000/chatbot'), // Replace with your Flask backend URL
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

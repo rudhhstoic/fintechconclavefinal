@@ -2,7 +2,7 @@ import pandas as pd
 import psycopg2
 
 # Load CSV data into a DataFrame
-csv_file_path = r'D:\Project\fintechconclavefinal\backend\updateddata.csv'
+csv_file_path = r'D:\fintechconclavefinal\backend\updateddata.csv'
 df = pd.read_csv(csv_file_path)
 
 # Database connection details

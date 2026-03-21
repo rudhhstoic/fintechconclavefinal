@@ -56,15 +56,15 @@ class _AnalysisPageState extends State<AnalysisPage> {
     switch (selectedAnalysis) {
       case 'Income Category Analysis':
         url =
-            'http://192.168.231.10:5000/income_category_analysis/${widget.serialId}';
+            'http://192.168.100.61:5000/income_category_analysis/${widget.serialId}';
         break;
       case 'Expense Category Analysis':
         url =
-            'http://192.168.231.10:5000/expense_category_analysis/${widget.serialId}';
+            'http://192.168.100.61:5000/expense_category_analysis/${widget.serialId}';
         break;
       case 'Income vs Expense Analysis':
         url =
-            'http://192.168.231.10:5000/income_vs_expense_analysis/${widget.serialId}';
+            'http://192.168.100.61:5000/income_vs_expense_analysis/${widget.serialId}';
         break;
       default:
         return;

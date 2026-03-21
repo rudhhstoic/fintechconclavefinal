@@ -143,7 +143,7 @@ class _TaxCalculatorInputPageState extends State<TaxCalculatorInputPage> {
   }
 
   Future<void> calculateTax(BuildContext context, Map<String, dynamic> userData) async {
-    final url = Uri.parse('http://192.168.231.10:5000/calculate_tax');
+    final url = Uri.parse('http://192.168.100.61:5000/calculate_tax');
     try {
       final response = await http.post(
         url,

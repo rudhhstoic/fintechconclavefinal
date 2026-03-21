@@ -29,8 +29,9 @@ def upload_file():
 
     recommend_message = recommend['overall_recommendations'][0]  # Extract the message string
     recommend_df = recommend['monthly_recommendations']
-    combined_df = combined_df.applymap(lambda x: str(x) if isinstance(x, pd.Period) else x)
-    recommend_df = recommend_df.applymap(lambda x: str(x) if isinstance(x, pd.Period) else x)
+    combined_df = combined_df.apply(lambda col: col.map(lambda x: str(x) if isinstance(x, pd.Period) else x))
+
+    recommend_df = recommend_df.apply(lambda col: col.map(lambda x: str(x) if isinstance(x, pd.Period) else x))
     
     # Convert DataFrame to JSON and return
     data_json = combined_df.to_dict(orient="records")

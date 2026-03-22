@@ -10,12 +10,15 @@ import 'home_page.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 import 'mutual_fund_page.dart';
-import 'tax_ip.dart';
+import 'tax_planner_page.dart';
 import 'reminder.dart';
 import 'article.dart';
 import 'theme_provider.dart';
 import 'home.dart'; 
 import 'package:provider/provider.dart';
+import 'screens/finsense/finsense_screen.dart';
+import 'screens/finsense/chat_screen.dart';
+import 'screens/aa_connect_screen.dart';
 
 void main() {
   runApp(
@@ -73,6 +76,9 @@ class MyApp extends StatelessWidget {
             '/tax': (context) => TaxCalculatorInputPage(),
             '/reminder': (context) => ReminderPage(),
             '/article': (context) => FinanceHomePage(),
+            '/finsense':       (context) => const FinsenseScreen(),
+            '/finsense/chat':  (context) => const ChatScreen(),
+            '/aa_connect':     (context) => const AaConnectScreen(),
           },
           initialRoute: '/',
         );

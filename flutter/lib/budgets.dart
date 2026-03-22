@@ -57,7 +57,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> fetchBudgets() async {
     final response = await http.get(
-      Uri.parse('http://192.168.100.61:5000/get_budgets/${widget.serialId}'),
+      Uri.parse('http://10.209.192.42:5000/get_budgets/${widget.serialId}'),
     );
 
     if (response.statusCode == 200) {
@@ -75,7 +75,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> setBudget(String category, String limit) async {
     final response = await http.post(
-      Uri.parse('http://192.168.100.61:5000/set_budget'),
+      Uri.parse('http://10.209.192.42:5000/set_budget'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'serial_id': widget.serialId,

@@ -1,0 +1,82 @@
+{
+  "transactions": [
+    {
+      "date": "2026-03-01",
+      "amount": 45000,
+      "type": "CREDIT",
+      "narration": "SALARY CREDITED",
+      "category": "Salary",
+      "balance": 45000
+    },
+    {
+      "date": "2026-03-02",
+      "amount": 1200,
+      "type": "DEBIT",
+      "narration": "SWIGGY ORDER",
+      "category": "Food",
+      "balance": 43800
+    },
+    {
+      "date": "2026-03-03",
+      "amount": 2000,
+      "type": "DEBIT",
+      "narration": "ZERODHA SIP",
+      "category": "Investment",
+      "balance": 41800
+    },
+    {
+      "date": "2026-03-05",
+      "amount": 800,
+      "type": "DEBIT",
+      "narration": "UBER RIDE",
+      "category": "Transport",
+      "balance": 41000
+    },
+    {
+      "date": "2026-03-07",
+      "amount": 3500,
+      "type": "DEBIT",
+      "narration": "AMAZON SHOPPING",
+      "category": "Shopping",
+      "balance": 37500
+    },
+    {
+      "date": "2026-03-10",
+      "amount": 1500,
+      "type": "DEBIT",
+      "narration": "AIRTEL BROADBAND",
+      "category": "Utilities",
+      "balance": 35350
+    },
+    {
+      "date": "2026-03-15",
+      "amount": 1800,
+      "type": "DEBIT",
+      "narration": "SWIGGY ORDER",
+      "category": "Food",
+      "balance": 30450
+    },
+    {
+      "date": "2026-03-17",
+      "amount": 5000,
+      "type": "DEBIT",
+      "narration": "MYNTRA SHOPPING",
+      "category": "Shopping",
+      "balance": 25450
+    },
+    {
+      "date": "2026-03-20",
+      "amount": 950,
+      "type": "DEBIT",
+      "narration": "ZOMATO ORDER",
+      "category": "Food",
+      "balance": 22800
+    }
+  ],
+  "summary": {
+    "total_income": 45000,
+    "total_expenses": 22200,
+    "savings": 22800,
+    "savings_rate": 50.6
+  }
+}

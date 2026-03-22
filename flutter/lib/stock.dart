@@ -53,7 +53,7 @@ class _StockPredictionPageState extends State<StockPredictionPage> {
       niftyreturn = null;
     });
 
-    final url = Uri.parse('http://192.168.100.61:5000/calculate_return');
+    final url = Uri.parse('http://10.209.192.42:5000/calculate_return');
     try {
       final response = await http.post(
         url,

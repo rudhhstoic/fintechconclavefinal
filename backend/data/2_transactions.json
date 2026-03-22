@@ -1,0 +1,170 @@
+{
+  "transactions": [
+    {
+      "date": "2026-03-01",
+      "amount": 75000.0,
+      "type": "CREDIT",
+      "narration": "SALARY CREDITED",
+      "category": "Salary",
+      "balance": 75000.0
+    },
+    {
+      "date": "2026-03-02",
+      "amount": 437.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 68951.0
+    },
+    {
+      "date": "2026-03-04",
+      "amount": 1953.0,
+      "type": "DEBIT",
+      "narration": "AMAZON",
+      "category": "Shopping",
+      "balance": 65837.0
+    },
+    {
+      "date": "2026-03-04",
+      "amount": 391.0,
+      "type": "DEBIT",
+      "narration": "FLIPKART",
+      "category": "Shopping",
+      "balance": 55452.0
+    },
+    {
+      "date": "2026-03-05",
+      "amount": 1945.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 55843.0
+    },
+    {
+      "date": "2026-03-07",
+      "amount": 1075.0,
+      "type": "DEBIT",
+      "narration": "ZOMATO",
+      "category": "Food",
+      "balance": 69388.0
+    },
+    {
+      "date": "2026-03-07",
+      "amount": 684.0,
+      "type": "DEBIT",
+      "narration": "PETROL PUMP",
+      "category": "Transport",
+      "balance": 58643.0
+    },
+    {
+      "date": "2026-03-07",
+      "amount": 1200.0,
+      "type": "DEBIT",
+      "narration": "ZOMATO",
+      "category": "Food",
+      "balance": 53361.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 1433.0,
+      "type": "DEBIT",
+      "narration": "FLIPKART",
+      "category": "Shopping",
+      "balance": 71992.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 348.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 57788.0
+    },
+    {
+      "date": "2026-03-14",
+      "amount": 1615.0,
+      "type": "DEBIT",
+      "narration": "MYNTRA",
+      "category": "Shopping",
+      "balance": 63452.0
+    },
+    {
+      "date": "2026-03-16",
+      "amount": 770.0,
+      "type": "DEBIT",
+      "narration": "WATER BILL",
+      "category": "Utilities",
+      "balance": 65067.0
+    },
+    {
+      "date": "2026-03-16",
+      "amount": 509.0,
+      "type": "DEBIT",
+      "narration": "ZOMATO",
+      "category": "Food",
+      "balance": 61142.0
+    },
+    {
+      "date": "2026-03-17",
+      "amount": 1161.0,
+      "type": "DEBIT",
+      "narration": "FLIPKART",
+      "category": "Shopping",
+      "balance": 67790.0
+    },
+    {
+      "date": "2026-03-22",
+      "amount": 1575.0,
+      "type": "DEBIT",
+      "narration": "ZERODHA SIP",
+      "category": "Investment",
+      "balance": 73425.0
+    },
+    {
+      "date": "2026-03-22",
+      "amount": 507.0,
+      "type": "DEBIT",
+      "narration": "PVR CINEMAS",
+      "category": "Entertainment",
+      "balance": 58136.0
+    },
+    {
+      "date": "2026-03-25",
+      "amount": 891.0,
+      "type": "DEBIT",
+      "narration": "GROWW",
+      "category": "Investment",
+      "balance": 54561.0
+    },
+    {
+      "date": "2026-03-26",
+      "amount": 1815.0,
+      "type": "DEBIT",
+      "narration": "ELECTRICITY BOARD",
+      "category": "Utilities",
+      "balance": 59327.0
+    },
+    {
+      "date": "2026-03-27",
+      "amount": 1529.0,
+      "type": "DEBIT",
+      "narration": "METRO RECHARGE",
+      "category": "Transport",
+      "balance": 70463.0
+    },
+    {
+      "date": "2026-03-28",
+      "amount": 1801.0,
+      "type": "DEBIT",
+      "narration": "PUNJABI DHABA",
+      "category": "Food",
+      "balance": 61651.0
+    }
+  ],
+  "summary": {
+    "total_income": 75000.0,
+    "total_expenses": 21639.0,
+    "savings": 53361.0,
+    "savings_rate": 71.1
+  }
+}

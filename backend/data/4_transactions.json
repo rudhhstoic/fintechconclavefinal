@@ -1,0 +1,90 @@
+{
+  "transactions": [
+    {
+      "date": "2026-03-01",
+      "amount": 12000.0,
+      "type": "CREDIT",
+      "narration": "SALARY CREDITED",
+      "category": "Salary",
+      "balance": 12000.0
+    },
+    {
+      "date": "2026-03-04",
+      "amount": 2311.0,
+      "type": "DEBIT",
+      "narration": "AMAZON",
+      "category": "Shopping",
+      "balance": 3136.0
+    },
+    {
+      "date": "2026-03-08",
+      "amount": 4896.0,
+      "type": "DEBIT",
+      "narration": "MYNTRA",
+      "category": "Shopping",
+      "balance": 7104.0
+    },
+    {
+      "date": "2026-03-08",
+      "amount": 1842.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": -3256.0
+    },
+    {
+      "date": "2026-03-10",
+      "amount": 729.0,
+      "type": "DEBIT",
+      "narration": "HDFC MUTUAL FUND",
+      "category": "Investment",
+      "balance": 5447.0
+    },
+    {
+      "date": "2026-03-12",
+      "amount": 1026.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": -7831.0
+    },
+    {
+      "date": "2026-03-12",
+      "amount": 402.0,
+      "type": "DEBIT",
+      "narration": "JIO RECHARGE",
+      "category": "Utilities",
+      "balance": -8233.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 928.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 6176.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 3549.0,
+      "type": "DEBIT",
+      "narration": "ZARA",
+      "category": "Shopping",
+      "balance": -6805.0
+    },
+    {
+      "date": "2026-03-19",
+      "amount": 4550.0,
+      "type": "DEBIT",
+      "narration": "NETFLIX",
+      "category": "Entertainment",
+      "balance": -1414.0
+    }
+  ],
+  "summary": {
+    "total_income": 12000.0,
+    "total_expenses": 20233.0,
+    "savings": -8233.0,
+    "savings_rate": -68.6
+  }
+}

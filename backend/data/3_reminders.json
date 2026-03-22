@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Home Loan EMI",
+    "amount": 28000,
+    "due_day": 3,
+    "type": "EMI"
+  },
+  {
+    "name": "Car Loan EMI",
+    "amount": 12000,
+    "due_day": 5,
+    "type": "EMI"
+  },
+  {
+    "name": "Zerodha SIP",
+    "amount": 10000,
+    "due_day": 10,
+    "type": "SIP"
+  }
+]

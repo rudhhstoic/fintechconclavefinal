@@ -1,0 +1,250 @@
+{
+  "transactions": [
+    {
+      "date": "2026-03-01",
+      "amount": 200000.0,
+      "type": "CREDIT",
+      "narration": "SALARY CREDITED",
+      "category": "Salary",
+      "balance": 200000.0
+    },
+    {
+      "date": "2026-03-03",
+      "amount": 1461.0,
+      "type": "DEBIT",
+      "narration": "ELECTRICITY BOARD",
+      "category": "Utilities",
+      "balance": 196874.0
+    },
+    {
+      "date": "2026-03-05",
+      "amount": 1871.0,
+      "type": "DEBIT",
+      "narration": "BOOKMYSHOW",
+      "category": "Entertainment",
+      "balance": 165335.0
+    },
+    {
+      "date": "2026-03-05",
+      "amount": 1140.0,
+      "type": "DEBIT",
+      "narration": "PUNJABI DHABA",
+      "category": "Food",
+      "balance": 162991.0
+    },
+    {
+      "date": "2026-03-06",
+      "amount": 518.0,
+      "type": "DEBIT",
+      "narration": "ZOMATO",
+      "category": "Food",
+      "balance": 194969.0
+    },
+    {
+      "date": "2026-03-09",
+      "amount": 428.0,
+      "type": "DEBIT",
+      "narration": "SPOTIFY",
+      "category": "Entertainment",
+      "balance": 183337.0
+    },
+    {
+      "date": "2026-03-10",
+      "amount": 1342.0,
+      "type": "DEBIT",
+      "narration": "ELECTRICITY BOARD",
+      "category": "Utilities",
+      "balance": 185708.0
+    },
+    {
+      "date": "2026-03-10",
+      "amount": 1853.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 167206.0
+    },
+    {
+      "date": "2026-03-11",
+      "amount": 1716.0,
+      "type": "DEBIT",
+      "narration": "SWIGGY",
+      "category": "Food",
+      "balance": 181621.0
+    },
+    {
+      "date": "2026-03-11",
+      "amount": 509.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 176270.0
+    },
+    {
+      "date": "2026-03-11",
+      "amount": 209.0,
+      "type": "DEBIT",
+      "narration": "JIO RECHARGE",
+      "category": "Utilities",
+      "balance": 169059.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 494.0,
+      "type": "DEBIT",
+      "narration": "BOOKMYSHOW",
+      "category": "Entertainment",
+      "balance": 194475.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 880.0,
+      "type": "DEBIT",
+      "narration": "PVR CINEMAS",
+      "category": "Entertainment",
+      "balance": 179262.0
+    },
+    {
+      "date": "2026-03-15",
+      "amount": 590.0,
+      "type": "DEBIT",
+      "narration": "FLIPKART",
+      "category": "Shopping",
+      "balance": 192012.0
+    },
+    {
+      "date": "2026-03-16",
+      "amount": 1570.0,
+      "type": "DEBIT",
+      "narration": "PVR CINEMAS",
+      "category": "Entertainment",
+      "balance": 188604.0
+    },
+    {
+      "date": "2026-03-18",
+      "amount": 1874.0,
+      "type": "DEBIT",
+      "narration": "HDFC MUTUAL FUND",
+      "category": "Investment",
+      "balance": 174396.0
+    },
+    {
+      "date": "2026-03-19",
+      "amount": 1873.0,
+      "type": "DEBIT",
+      "narration": "PETROL PUMP",
+      "category": "Transport",
+      "balance": 192602.0
+    },
+    {
+      "date": "2026-03-19",
+      "amount": 1554.0,
+      "type": "DEBIT",
+      "narration": "ZERODHA SIP",
+      "category": "Investment",
+      "balance": 187050.0
+    },
+    {
+      "date": "2026-03-19",
+      "amount": 1107.0,
+      "type": "DEBIT",
+      "narration": "SWIGGY",
+      "category": "Food",
+      "balance": 178155.0
+    },
+    {
+      "date": "2026-03-20",
+      "amount": 1838.0,
+      "type": "DEBIT",
+      "narration": "METRO RECHARGE",
+      "category": "Transport",
+      "balance": 190174.0
+    },
+    {
+      "date": "2026-03-21",
+      "amount": 1376.0,
+      "type": "DEBIT",
+      "narration": "UBER",
+      "category": "Transport",
+      "balance": 176779.0
+    },
+    {
+      "date": "2026-03-22",
+      "amount": 1387.0,
+      "type": "DEBIT",
+      "narration": "FLIPKART",
+      "category": "Shopping",
+      "balance": 195487.0
+    },
+    {
+      "date": "2026-03-23",
+      "amount": 1595.0,
+      "type": "DEBIT",
+      "narration": "OLA",
+      "category": "Transport",
+      "balance": 172801.0
+    },
+    {
+      "date": "2026-03-23",
+      "amount": 1094.0,
+      "type": "DEBIT",
+      "narration": "ELECTRICITY BOARD",
+      "category": "Utilities",
+      "balance": 170659.0
+    },
+    {
+      "date": "2026-03-24",
+      "amount": 1943.0,
+      "type": "DEBIT",
+      "narration": "PUNJABI DHABA",
+      "category": "Food",
+      "balance": 183765.0
+    },
+    {
+      "date": "2026-03-26",
+      "amount": 1479.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 180142.0
+    },
+    {
+      "date": "2026-03-26",
+      "amount": 1048.0,
+      "type": "DEBIT",
+      "narration": "NETFLIX",
+      "category": "Entertainment",
+      "balance": 171753.0
+    },
+    {
+      "date": "2026-03-26",
+      "amount": 1391.0,
+      "type": "DEBIT",
+      "narration": "ZOMATO",
+      "category": "Food",
+      "balance": 169268.0
+    },
+    {
+      "date": "2026-03-27",
+      "amount": 1204.0,
+      "type": "DEBIT",
+      "narration": "STARBUCKS",
+      "category": "Food",
+      "balance": 164131.0
+    },
+    {
+      "date": "2026-03-28",
+      "amount": 1665.0,
+      "type": "DEBIT",
+      "narration": "GROWW",
+      "category": "Investment",
+      "balance": 198335.0
+    }
+  ],
+  "summary": {
+    "total_income": 200000.0,
+    "total_expenses": 37009.0,
+    "savings": 162991.0,
+    "savings_rate": 81.5
+  }
+}

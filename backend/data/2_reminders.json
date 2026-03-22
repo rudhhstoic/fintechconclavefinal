@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Axis Bluechip SIP",
+    "amount": 5000,
+    "due_day": 5,
+    "type": "SIP"
+  },
+  {
+    "name": "LIC Premium",
+    "amount": 8500,
+    "due_day": 27,
+    "type": "Bill"
+  },
+  {
+    "name": "Airtel",
+    "amount": 999,
+    "due_day": 22,
+    "type": "Bill"
+  }
+]

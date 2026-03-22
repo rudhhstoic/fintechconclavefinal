@@ -1,0 +1,130 @@
+{
+  "transactions": [
+    {
+      "date": "2026-03-01",
+      "amount": 35000.0,
+      "type": "CREDIT",
+      "narration": "SALARY CREDITED",
+      "category": "Salary",
+      "balance": 35000.0
+    },
+    {
+      "date": "2026-03-04",
+      "amount": 1852.0,
+      "type": "DEBIT",
+      "narration": "OLA",
+      "category": "Transport",
+      "balance": 19801.0
+    },
+    {
+      "date": "2026-03-05",
+      "amount": 2021.0,
+      "type": "DEBIT",
+      "narration": "STARBUCKS",
+      "category": "Food",
+      "balance": 32979.0
+    },
+    {
+      "date": "2026-03-06",
+      "amount": 1854.0,
+      "type": "DEBIT",
+      "narration": "HDFC MUTUAL FUND",
+      "category": "Investment",
+      "balance": 31125.0
+    },
+    {
+      "date": "2026-03-06",
+      "amount": 3716.0,
+      "type": "DEBIT",
+      "narration": "AMAZON",
+      "category": "Shopping",
+      "balance": 12990.0
+    },
+    {
+      "date": "2026-03-09",
+      "amount": 2742.0,
+      "type": "DEBIT",
+      "narration": "BOOKMYSHOW",
+      "category": "Entertainment",
+      "balance": 27508.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 321.0,
+      "type": "DEBIT",
+      "narration": "AIRTEL BILL",
+      "category": "Utilities",
+      "balance": 25948.0
+    },
+    {
+      "date": "2026-03-13",
+      "amount": 761.0,
+      "type": "DEBIT",
+      "narration": "HDFC MUTUAL FUND",
+      "category": "Investment",
+      "balance": 16706.0
+    },
+    {
+      "date": "2026-03-14",
+      "amount": 2334.0,
+      "type": "DEBIT",
+      "narration": "MYNTRA",
+      "category": "Shopping",
+      "balance": 17467.0
+    },
+    {
+      "date": "2026-03-15",
+      "amount": 1674.0,
+      "type": "DEBIT",
+      "narration": "ZERODHA SIP",
+      "category": "Investment",
+      "balance": 22461.0
+    },
+    {
+      "date": "2026-03-16",
+      "amount": 4270.0,
+      "type": "DEBIT",
+      "narration": "ZARA",
+      "category": "Shopping",
+      "balance": 8720.0
+    },
+    {
+      "date": "2026-03-18",
+      "amount": 1239.0,
+      "type": "DEBIT",
+      "narration": "GROWW",
+      "category": "Investment",
+      "balance": 26269.0
+    },
+    {
+      "date": "2026-03-20",
+      "amount": 808.0,
+      "type": "DEBIT",
+      "narration": "HDFC MUTUAL FUND",
+      "category": "Investment",
+      "balance": 21653.0
+    },
+    {
+      "date": "2026-03-23",
+      "amount": 1813.0,
+      "type": "DEBIT",
+      "narration": "ELECTRICITY BOARD",
+      "category": "Utilities",
+      "balance": 24135.0
+    },
+    {
+      "date": "2026-03-27",
+      "amount": 875.0,
+      "type": "DEBIT",
+      "narration": "HDFC MUTUAL FUND",
+      "category": "Investment",
+      "balance": 30250.0
+    }
+  ],
+  "summary": {
+    "total_income": 35000.0,
+    "total_expenses": 26280.0,
+    "savings": 8720.0,
+    "savings_rate": 24.9
+  }
+}

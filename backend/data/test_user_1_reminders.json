@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Axis Bluechip SIP",
+    "amount": 2000,
+    "due_day": 25,
+    "type": "SIP"
+  },
+  {
+    "name": "Netflix",
+    "amount": 649,
+    "due_day": 24,
+    "type": "Bill"
+  },
+  {
+    "name": "Home Loan EMI",
+    "amount": 12000,
+    "due_day": 28,
+    "type": "EMI"
+  }
+]

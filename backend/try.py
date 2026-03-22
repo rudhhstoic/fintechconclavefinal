@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, json
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, and_
@@ -13,7 +13,7 @@ import pandas as pd
 import requests
 import joblib
 from datetime import datetime, timedelta
-from bot import FinanceChatbotModel  # Import your chatbot model class
+from bot import FinanceChatbotModel
 import numpy as np
 from savings import save_model
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -22,9 +22,19 @@ from twilio.rest import Client
 import logging
 from statement import read_and_concat_tables
 import yfinance as yf
+from tax_engine import tax_bp
+import subprocess
+from setu_aa.client import SetuAAClient
+from setu_aa.parser import parse_transactions, get_summary
+from recommend import FinancialAnalyzer
+from finsense.agent import chat as finsense_chat_logic
+from finsense.warnings import check_warnings as finsense_check_warnings
+from finsense.reminders import get_reminders as finsense_get_reminders_logic, save_reminder as finsense_save_reminder_logic
+from finsense.reports import generate_monthly_report as finsense_generate_report
 
 # Initialize Flask app
 app = Flask(__name__)
+app.register_blueprint(tax_bp)
 CORS(app)
 
 # Load environment variables
@@ -53,11 +63,24 @@ scheduler.start()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Initialize additional AI/AA components
+aa_client = SetuAAClient()
+financial_analyzer = FinancialAnalyzer()
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
 # Initialize chatbot model
 chatbot = FinanceChatbotModel(GEMINI_API_KEY)
 
 # Load budget recommendation model
-model = joblib.load(r'D:\fintechconclavefinal\backend\models\budget_recommendation_model.pkl')
+# Use a relative path or the one found in app_archana (D: drive)
+model_path = r'D:\fintechconclavefinal\backend\models\budget_recommendation_model.pkl'
+if not os.path.exists(model_path):
+    # Fallback to current directory for portability
+    model_path = os.path.join(os.path.dirname(__file__), "models", "budget_recommendation_model.pkl")
+
+model = joblib.load(model_path)
 
 # Define Database Models
 class Customer(db.Model):
@@ -137,79 +160,6 @@ class MutualFund(db.Model):
             'age': self.age or ''
         }
 
-def calculate_tax(data):
-    # Extract inputs
-    financial_year = data.get('financial_year')
-    basic_income = float(data.get('basic_income', 0))
-    special_income = float(data.get('special_income', 0))
-    hra_received = float(data.get('hra_received', 0))
-    deductions = data.get('deductions', {})
-    capital_gains = data.get('capital_gains', {})
-
-    # Calculate gross salary and other inputs
-    gross_salary = basic_income + special_income + hra_received
-    total_deductions = (
-        deductions.get('deduction80C', 0) +
-        deductions.get('deduction80D', 0) +
-        deductions.get('deduction80E', 0) +
-        deductions.get('deduction80G', 0)
-    )
-    # Capital gains (if needed for specific tax treatment)
-    total_capital_gains = sum(capital_gains.values())
-
-    # Calculate taxable income
-    taxable_income = gross_salary - total_deductions
-    income_tax = 0
-
-    # Apply tax slabs based on the financial year
-    if financial_year == '2023-24':
-        if taxable_income <= 300000:
-            income_tax = 0
-        elif taxable_income <= 600000:
-            income_tax = (taxable_income - 300000) * 0.05
-        elif taxable_income <= 900000:
-            income_tax = (taxable_income - 600000) * 0.1 + 15000
-        elif taxable_income <= 1200000:
-            income_tax = (taxable_income - 900000) * 0.15 + 45000
-        elif taxable_income <= 1500000:
-            income_tax = (taxable_income - 1200000) * 0.2 + 90000
-        else:
-            income_tax = (taxable_income - 1500000) * 0.3 + 150000
-    elif financial_year == '2024-25':
-        if taxable_income <= 300000:
-            income_tax = 0
-        elif taxable_income <= 700000:
-            income_tax = (taxable_income - 300000) * 0.05
-        elif taxable_income <= 1000000:
-            income_tax = (taxable_income - 700000) * 0.1 + 20000
-        elif taxable_income <= 1200000:
-            income_tax = (taxable_income - 1000000) * 0.15 + 50000
-        elif taxable_income <= 1500000:
-            income_tax = (taxable_income - 1200000) * 0.2 + 80000
-        else:
-            income_tax = (taxable_income - 1500000) * 0.3 + 140000
-
-    # Calculate rebate under Section 87A if applicable
-    rebate = 0
-    if financial_year == '2024-25' and taxable_income <= 700000:
-        rebate = min(12500, income_tax)
-
-    # Final tax after rebate
-    tax_after_rebate = income_tax - rebate
-
-    # Health and Education Cess at 4%
-    cess = tax_after_rebate * 0.04
-    total_tax_liability = tax_after_rebate + cess
-
-    return {
-        "actual_tax": income_tax,
-        "rebate": rebate,
-        "tax_after_rebate": tax_after_rebate,
-        "cess": cess,
-        "total_tax_liability": total_tax_liability,
-        "total_deductions":total_deductions
-    }
-
 
 with app.app_context():
     db.create_all()
@@ -280,6 +230,25 @@ def login():
         if result:
             stored_hashed_password, serial_id = result
             if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
+                # Auto-assign demo data if user has no FinSense data yet
+                import shutil
+                user_tx_file = os.path.join(DATA_DIR, f"{serial_id}_transactions.json")
+                if not os.path.exists(user_tx_file):
+                    # Assign demo profile based on user ID (cycles through 1-5)
+                    demo_id = (serial_id % 5) + 1
+                    demo_tx = os.path.join(DATA_DIR, f"{demo_id}_transactions.json")
+                    demo_budget = os.path.join(DATA_DIR, f"{demo_id}_budget.json")
+                    demo_reminders = os.path.join(DATA_DIR, f"{demo_id}_reminders.json")
+                    
+                    if os.path.exists(demo_tx):
+                        shutil.copy(demo_tx, user_tx_file)
+                    if os.path.exists(demo_budget):
+                        shutil.copy(demo_budget, os.path.join(DATA_DIR, f"{serial_id}_budget.json"))
+                    if os.path.exists(demo_reminders):
+                        shutil.copy(demo_reminders, os.path.join(DATA_DIR, f"{serial_id}_reminders.json"))
+                    
+                    logger.info(f"Auto-assigned demo profile {demo_id} to user {serial_id}")
+
                 return jsonify({'message': 'Login successful', 'serial_id': serial_id ,"name" : name.title()}), 200
             else:
                 return jsonify({'message': 'Invalid credentials'}), 401
@@ -847,7 +816,45 @@ def upload_file():
     total_credit_values = [entry.get('total_credit', 0) for entry in recommend_data if isinstance(entry.get('total_credit', None), (int, float))]
     average_total_credit = sum(total_credit_values) / len(total_credit_values) if total_credit_values else 0
 
-    return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data, average_total_credit=average_total_credit) # if monthly analysis too needed give--> return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data)
+    # Save to FinSense format for AI agent
+    try:
+        serial_id = request.form.get('serial_id')
+        if serial_id:
+            total_income = combined_df['Credit'].sum() if 'Credit' in combined_df.columns else 0
+            total_expenses = combined_df['Debit'].sum() if 'Debit' in combined_df.columns else 0
+            recommendations_list = recommend.get('overall_recommendations', [])
+
+            finsense_data = {
+                "transactions": [],
+                "summary": {
+                    "total_income": float(total_income),
+                    "total_expenses": float(total_expenses), 
+                    "savings": float(total_income - total_expenses),
+                    "savings_rate": round(float((total_income - total_expenses) / total_income * 100), 1) if total_income > 0 else 0
+                },
+                "overall_recommendations": recommendations_list
+            }
+
+            # Convert existing transaction data to FinSense format
+            tx_list = []
+            for _, row in combined_df.iterrows():
+                tx_list.append({
+                    "date": str(row.get('Date', '')),
+                    "amount": float(row.get('Debit', row.get('Credit', 0))),
+                    "type": "DEBIT" if row.get('Debit', 0) > 0 else "CREDIT",
+                    "narration": str(row.get('Description', row.get('Narration', ''))),
+                    "category": str(row.get('Category', 'Other')),
+                    "balance": float(row.get('Balance', 0))
+                })
+            finsense_data["transactions"] = tx_list
+
+            tx_file = os.path.join(DATA_DIR, f"{serial_id}_transactions.json")
+            with open(tx_file, 'w') as f:
+                json.dump(finsense_data, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to sync statement analysis to FinSense: {e}")
+
+    return jsonify(data=data_json, recommend_message=recommend_message, recommend_data=recommend_data, average_total_credit=average_total_credit)
 
 @app.route('/calculate_return', methods=['POST'])
 def calculate_return():
@@ -906,18 +913,6 @@ def calculate_return():
 
     return jsonify(result)
 
-@app.route('/calculate_tax', methods=['POST'])
-def calculate_tax_route():
-    data = request.get_json()
-    if not data:
-        return jsonify({'error': 'No data provided'}), 400
-
-    try:
-        tax_details = calculate_tax(data)
-        return jsonify(tax_details)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/recommend_budgets/<int:total_credit>', methods=['POST'])
 def get_recommendations(total_credit):
     #data = request.json
@@ -970,6 +965,25 @@ def add_budget(serial_id):
         db.session.add(budget)
 
     db.session.commit()
+
+    # Also sync budget to FinSense JSON for AI warnings
+    try:
+        budget_file = os.path.join(DATA_DIR, f"{serial_id}_budget.json")
+        try:
+            with open(budget_file, 'r') as f:
+                budget_json = json.load(f)
+        except:
+            budget_json = {}
+
+        budget_json[category] = {
+            "limit": float(limit),
+            "spent": float(total_spent)
+        }
+
+        with open(budget_file, 'w') as f:
+            json.dump(budget_json, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to sync budget to FinSense: {e}")
 
     return jsonify({
         "message": "Budget added successfully"})
@@ -1046,6 +1060,118 @@ def analyse_stock():
         }), 500
 
 
+# --- Setu AA Routes ---
+
+@app.route('/api/aa/initiate', methods=['POST'])
+def initiate_aa():
+    data = request.get_json()
+    if not data: return jsonify({"error": "No JSON"}), 400
+    user_id = data.get('user_id')
+    mobile_number = data.get('mobile_number')
+    if not user_id or not mobile_number:
+        return jsonify({"error": "user_id and mobile_number are required"}), 400
+    result = aa_client.create_consent_request(user_id, mobile_number)
+    return jsonify(result)
+
+@app.route('/api/aa/status/<consent_handle>', methods=['GET'])
+def check_aa_status(consent_handle):
+    result = aa_client.get_consent_status(consent_handle)
+    return jsonify(result)
+
+@app.route('/api/aa/fetch', methods=['POST'])
+def fetch_aa_data():
+    data = request.get_json()
+    if not data: return jsonify({"error": "No JSON"}), 400
+    consent_handle = data.get('consent_handle')
+    user_id = data.get('user_id')
+    if not consent_handle or not user_id:
+        return jsonify({"error": "Required fields missing"}), 400
+        
+    fetch_result = aa_client.fetch_fi_data(consent_handle)
+    if fetch_result['status'] == 'error':
+        return jsonify(fetch_result), 500
+        
+    raw_fi_data = fetch_result['raw_fi_data']
+    transactions = parse_transactions(raw_fi_data)
+    summary = get_summary(transactions)
+    
+    if transactions:
+        df = pd.DataFrame(transactions)
+        df['Debit'] = df.apply(lambda x: x['Amount'] if x['Type'] == 'DEBIT' else 0, axis=1)
+        df['Credit'] = df.apply(lambda x: x['Amount'] if x['Type'] == 'CREDIT' else 0, axis=1)
+        
+        try:
+            clustering_results = financial_analyzer.analyse(df)
+            monthly_rec_df = clustering_results['monthly_recommendations']
+            monthly_rec_df = monthly_rec_df.apply(lambda col: col.map(lambda x: str(x) if isinstance(x, pd.Period) else x))
+            
+            result_to_store = {
+                "user_id": user_id,
+                "transactions": transactions,
+                "summary": summary,
+                "overall_recommendations": clustering_results['overall_recommendations'],
+                "monthly_analysis": monthly_rec_df.to_dict(orient="records")
+            }
+            
+            file_path = os.path.join(DATA_DIR, f"{user_id}_transactions.json")
+            with open(file_path, "w") as f:
+                json.dump(result_to_store, f, indent=4)
+                
+            return jsonify({
+                "status": "success",
+                "summary": summary,
+                "overall_recommendations": clustering_results['overall_recommendations'],
+                "monthly_analysis": result_to_store["monthly_analysis"],
+                "transactions": transactions # For Flutter to render locally
+            })
+        except Exception as e:
+            logger.error(f"Analysis failed: {str(e)}")
+            return jsonify({"status": "error", "message": str(e)}), 500
+    else:
+        return jsonify({"status": "success", "message": "No transactions", "summary": summary})
+
+# --- FinSense AI Routes ---
+
+@app.route('/api/finsense/chat', methods=['POST'])
+def finsense_chat():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    message = data.get('message')
+    history = data.get('history', [])
+    if not user_id or not message:
+        return jsonify({"error": "Missing fields"}), 400
+    response_text = finsense_chat_logic(user_id, message, history)
+    return jsonify({"response": response_text})
+
+@app.route('/api/finsense/warnings/<user_id>', methods=['GET'])
+def finsense_warnings(user_id):
+    try:
+        warnings = finsense_check_warnings(user_id)
+        return jsonify({"warnings": warnings})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/finsense/reminders/<user_id>', methods=['GET', 'POST'])
+def finsense_reminders_route(user_id):
+    if request.method == 'GET':
+        try:
+            reminders = finsense_get_reminders_logic(user_id)
+            return jsonify({"reminders": reminders})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        data = request.get_json()
+        success = finsense_save_reminder_logic(user_id, data)
+        return jsonify({"success": success})
+
+@app.route('/api/finsense/report/<user_id>', methods=['GET'])
+def finsense_report(user_id):
+    try:
+        report = finsense_generate_report(user_id)
+        return jsonify(report)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
-    #app.run(debug=True, port=5000, ssl_context=('cert.pem', 'key.pem'))
-    app.run(debug=True,host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

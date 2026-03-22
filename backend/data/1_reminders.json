@@ -1,0 +1,44 @@
+[
+    {
+        "name": "Jio Recharge",
+        "amount": 299,
+        "due_day": 25,
+        "type": "Bill"
+    },
+    {
+        "name": "Netflix",
+        "amount": 649,
+        "due_day": 28,
+        "type": "Bill"
+    },
+    {
+        "name": "Rent",
+        "amount": 10000,
+        "due_day": 1,
+        "type": "Bill"
+    },
+    {
+        "name": "Exam fees",
+        "amount": 3500.0,
+        "due_day": 23,
+        "type": "Bill"
+    },
+    {
+        "name": "Rent",
+        "amount": 15000.0,
+        "due_day": 1,
+        "type": "Bill"
+    },
+    {
+        "name": "Rent",
+        "amount": 15000.0,
+        "due_day": 1,
+        "type": "Bill"
+    },
+    {
+        "name": "Rent",
+        "amount": 15000.0,
+        "due_day": 1,
+        "type": "Bill"
+    }
+]

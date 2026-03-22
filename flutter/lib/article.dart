@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(FinanceApp());
@@ -61,7 +61,7 @@ class _FinanceHomePageState extends State<FinanceHomePage> {
       isLoading = true;
     });
 
-    final url = Uri.parse('http://192.168.100.61:5000/get_articles');
+    final url = Uri.parse('http://10.209.192.42:5000/get_articles');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -84,10 +84,12 @@ class _FinanceHomePageState extends State<FinanceHomePage> {
   }
 
   void openURL(String url) async {
-    if (await canLaunchUrlString(url)) {
-      await launchUrlString(url, mode: LaunchMode.externalApplication);
-    } else {
-      print('Could not launch $url');
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      // Show feedback to user instead of silent fail
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open: $url')),
+      );
     }
   }
 

@@ -49,7 +49,7 @@ class UploadPageState extends State<UploadPage> {
 
   Future<void> fetchMutualFunds() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.100.61:5000/mutualfunds'));
+      final response = await http.get(Uri.parse('http://10.209.192.42:5000/mutualfunds'));
       if (response.statusCode == 200) {
         List<dynamic> fundsData = json.decode(response.body);
         setState(() {
@@ -92,7 +92,7 @@ class UploadPageState extends State<UploadPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://192.168.100.61:5000/upload'),
+        Uri.parse('http://10.209.192.42:5000/upload'),
       );
 
       request.fields['text'] = selectedBank!;
@@ -148,7 +148,7 @@ class UploadPageState extends State<UploadPage> {
       final int totalCreditInt = totalCredit.toInt();
       print(totalCreditInt);
       final response = await http.post(
-        Uri.parse('http://192.168.100.61:5000/recommend_budgets/$totalCreditInt'),
+        Uri.parse('http://10.209.192.42:5000/recommend_budgets/$totalCreditInt'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -172,7 +172,7 @@ class UploadPageState extends State<UploadPage> {
     final serialId = Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.100.61:5000/add_budget/$serialId'),
+        Uri.parse('http://10.209.192.42:5000/add_budget/$serialId'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'category': category,

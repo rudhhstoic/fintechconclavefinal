@@ -10,6 +10,8 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   final List<String> _options = [
+    'FinSense AI',
+    'Connect Your Bank',
     'Spending Analysis',
     'Budget Planning',
     'Stock Prediction',
@@ -22,6 +24,8 @@ class HomePageState extends State<HomePage>
   final List<String> _images = [
     'assets/image6.jpg',
     'assets/image12.jpg',
+    'assets/image6.jpg',
+    'assets/image12.jpg',
     'assets/stock.jpg',
     'assets/image8.jpg',
     'assets/tax.jpg',
@@ -30,6 +34,8 @@ class HomePageState extends State<HomePage>
   ];
 
   final List<String> _descriptions = [
+    'Your AI-powered financial co-pilot. Get smart alerts, reminders and instant answers about your money.',
+    'Securely sync your bank transactions using RBI-approved Account Aggregator technology.',
     'Analyze your spending habits to better manage your finances.',
     'Plan your budget effectively to save for your future goals.',
     'Predict stock trends and make informed investment decisions.',
@@ -171,6 +177,8 @@ class HomePageState extends State<HomePage>
                         Navigator.pushNamed(
                           context,
                           {
+                            'FinSense AI': '/finsense',
+                            'Connect Your Bank': '/aa_connect',
                             'Spending Analysis': '/statement_analyse',
                             'Budget Planning': '/management',
                             'Stock Prediction': '/stock',

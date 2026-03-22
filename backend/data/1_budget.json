@@ -1,0 +1,26 @@
+{
+  "Food": {
+    "limit": 4000,
+    "spent": 5200
+  },
+  "Entertainment": {
+    "limit": 2000,
+    "spent": 3100
+  },
+  "Transport": {
+    "limit": 1500,
+    "spent": 1800
+  },
+  "Shopping": {
+    "limit": 3000,
+    "spent": 4500
+  },
+  "Utilities": {
+    "limit": 1200,
+    "spent": 1100
+  },
+  "Investment": {
+    "limit": 2000,
+    "spent": 0
+  }
+}

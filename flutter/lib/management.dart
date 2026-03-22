@@ -72,7 +72,7 @@ class HomeManageState extends State<HomeManage> {
     final serialId =
         Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     final url =
-        'http://192.168.100.61:5000/get_transaction/${serialId}'; // Replace with actual Flask URL
+        'http://10.209.192.42:5000/get_transaction/${serialId}'; // Replace with actual Flask URL
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -314,7 +314,7 @@ class AddTransactionPageState extends State<AddTransactionPage> {
     final serialId =
         Provider.of<AuthProvider>(context, listen: false).serialId ?? 0;
     final transactionType = isIncome ? 'Income' : 'Expense';
-    final url = 'http://192.168.100.61:5000/add_transaction';
+    final url = 'http://10.209.192.42:5000/add_transaction';
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},

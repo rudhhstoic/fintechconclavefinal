@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Mirae Asset SIP",
+    "amount": 20000,
+    "due_day": 3,
+    "type": "SIP"
+  },
+  {
+    "name": "HDFC Flexi Cap SIP",
+    "amount": 15000,
+    "due_day": 3,
+    "type": "SIP"
+  },
+  {
+    "name": "Axis Small Cap SIP",
+    "amount": 10000,
+    "due_day": 5,
+    "type": "SIP"
+  },
+  {
+    "name": "Term Insurance",
+    "amount": 25000,
+    "due_day": 20,
+    "type": "Bill"
+  }
+]

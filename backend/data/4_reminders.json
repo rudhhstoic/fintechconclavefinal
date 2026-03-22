@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Hostel Fee",
+    "amount": 8000,
+    "due_day": 1,
+    "type": "Bill"
+  },
+  {
+    "name": "Hotstar",
+    "amount": 299,
+    "due_day": 15,
+    "type": "Bill"
+  }
+]
